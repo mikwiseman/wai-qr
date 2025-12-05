@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { isAuthenticatedSync } from '@/lib/auth'
 
 // Routes that don't require authentication
-const publicPaths = ['/login', '/r/']
+const publicPaths = ['/login', '/r/', '/api/auth/']
 
 function isPublicPath(pathname: string): boolean {
   return publicPaths.some(path => pathname.startsWith(path))
