@@ -1,0 +1,38 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { supabase } from '@/lib/supabase'
+import { generateQRCodeBuffer } from '@/lib/qrcode'
+
+// GET /api/qr/[code] - Download QR code as PNG
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ code: string }> }
+) {
+  try {
+    const { code } = await params
+
+    const { data: qrCode, error } = await supabase
+      .from('qr_codes')
+      .select('*')
+      .eq('short_code', code)
+      .single()
+
+    if (error || !qrCode) {
+      return NextResponse.json({ error: 'QR code not found' }, { status: 404 })
+    }
+
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    const redirectUrl = `${baseUrl}/r/${qrCode.short_code}`
+
+    const buffer = await generateQRCodeBuffer(redirectUrl)
+
+    return new NextResponse(new Uint8Array(buffer), {
+      headers: {
+        'Content-Type': 'image/png',
+        'Content-Disposition': `attachment; filename="qrcode-${qrCode.short_code}.png"`,
+      },
+    })
+  } catch (error) {
+    console.error('Error:', error)
+    return NextResponse.json({ error: 'Failed to generate QR code' }, { status: 500 })
+  }
+}
