@@ -2,10 +2,14 @@ import { cookies } from 'next/headers'
 import { serialize } from 'cookie'
 
 const AUTH_COOKIE_NAME = 'qr_auth'
-const AUTH_PASSWORD = process.env.AUTH_PASSWORD
 
 export function verifyPassword(password: string): boolean {
-  return password === AUTH_PASSWORD
+  const authPassword = process.env.AUTH_PASSWORD
+  if (!authPassword) {
+    console.error('AUTH_PASSWORD environment variable is not set')
+    return false
+  }
+  return password === authPassword
 }
 
 export function getAuthCookie(authenticated: boolean): string {
