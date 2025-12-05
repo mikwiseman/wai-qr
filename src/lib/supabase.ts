@@ -1,20 +1,31 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-
 let supabaseInstance: SupabaseClient | null = null
 
-export const supabase = (() => {
-  if (!supabaseInstance && supabaseUrl && supabaseAnonKey) {
-    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey)
+export function getSupabase(): SupabaseClient {
+  if (supabaseInstance) {
+    return supabaseInstance
   }
-  if (!supabaseInstance) {
-    // Return a mock client for build time
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    // Return a placeholder client for build time
     return createClient('https://placeholder.supabase.co', 'placeholder-key')
   }
+
+  supabaseInstance = createClient(supabaseUrl, supabaseAnonKey)
   return supabaseInstance
-})()
+}
+
+// Export as getter for backward compatibility
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_, prop) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (getSupabase() as any)[prop]
+  }
+})
 
 // Types for our database tables
 export interface QRCode {
