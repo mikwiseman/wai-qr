@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServerSupabase, CenterImageType } from '@/lib/supabase'
 import { generateShortCode } from '@/lib/shortcode'
-import { CenterImageType } from '@/lib/supabase'
 
 // GET /api/qrcodes - List user's QR codes with scan counts
 export async function GET() {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerSupabase()
 
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -47,7 +46,7 @@ export async function GET() {
 // POST /api/qrcodes - Create a new QR code
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerSupabase()
 
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser()
