@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "QR Analytics - Create and Track QR Codes",
+  title: "WaiQR - Create and Track QR Codes",
   description: "Create custom QR codes with your own logo, track scans, and view detailed analytics. See device types, browsers, locations, and more.",
   keywords: ["QR code", "analytics", "tracking", "custom QR", "QR generator"],
 };
