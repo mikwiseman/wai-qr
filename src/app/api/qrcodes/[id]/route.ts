@@ -35,7 +35,7 @@ export async function GET(
       .eq('qr_code_id', id)
 
     // Generate the redirect URL
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://waiqr.xyz'
     const redirectUrl = `${baseUrl}/r/${qrCode.short_code}`
 
     // Build logo options from stored settings

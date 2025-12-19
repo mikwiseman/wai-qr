@@ -22,7 +22,7 @@ export async function GET(
       return NextResponse.json({ error: 'QR code not found' }, { status: 404 })
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://waiqr.xyz'
     const redirectUrl = `${baseUrl}/r/${qrCode.short_code}`
 
     // Build logo options from stored settings

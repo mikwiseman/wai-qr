@@ -26,7 +26,7 @@ async function getQRCode(id: string) {
     .eq('qr_code_id', id)
 
   // Generate the redirect URL
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://waiqr.xyz'
   const redirectUrl = `${baseUrl}/r/${qrCode.short_code}`
 
   // Generate QR code image as data URL
