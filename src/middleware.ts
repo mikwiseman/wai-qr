@@ -1,21 +1,16 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { isAuthenticatedSync } from '@/lib/auth'
+import { updateSession } from '@/lib/supabase/middleware'
 
 // Routes that don't require authentication
-const publicPaths = ['/login', '/r/', '/api/auth/']
+const publicPaths = ['/login', '/r/', '/api/auth/', '/auth/']
 
 function isPublicPath(pathname: string): boolean {
   return publicPaths.some(path => pathname.startsWith(path))
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-
-  // Skip public routes
-  if (isPublicPath(pathname)) {
-    return NextResponse.next()
-  }
 
   // Skip static files and Next.js internals
   if (
@@ -26,20 +21,27 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Check authentication
-  const cookieHeader = request.headers.get('cookie')
-  const authenticated = isAuthenticatedSync(cookieHeader)
+  // Skip public routes but still update session for token refresh
+  if (isPublicPath(pathname)) {
+    const { supabaseResponse } = await updateSession(request)
+    return supabaseResponse
+  }
 
-  if (!authenticated) {
+  // Check Supabase authentication
+  const { user, supabaseResponse } = await updateSession(request)
+
+  if (!user) {
     // Redirect to login
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('from', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  return NextResponse.next()
+  return supabaseResponse
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }

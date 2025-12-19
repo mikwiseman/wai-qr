@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
-import { generateQRCodeDataURL } from '@/lib/qrcode'
+import { createClient } from '@/lib/supabase/server'
+import { generateQRCodeDataURL, LogoOptions } from '@/lib/qrcode'
+import { CenterImageType } from '@/lib/supabase'
 
 // GET /api/qrcodes/[id] - Get single QR code with full details
 export async function GET(
@@ -9,11 +10,19 @@ export async function GET(
 ) {
   try {
     const { id } = await params
+    const supabase = await createClient()
+
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
     const { data: qrCode, error } = await supabase
       .from('qr_codes')
       .select('*')
       .eq('id', id)
+      .eq('user_id', user.id)
       .single()
 
     if (error || !qrCode) {
@@ -30,8 +39,14 @@ export async function GET(
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
     const redirectUrl = `${baseUrl}/r/${qrCode.short_code}`
 
+    // Build logo options from stored settings
+    const logoOptions: LogoOptions = {
+      type: (qrCode.center_image_type as CenterImageType) || 'default',
+      reference: qrCode.center_image_ref || undefined,
+    }
+
     // Generate QR code image as data URL
-    const qrImageDataUrl = await generateQRCodeDataURL(redirectUrl)
+    const qrImageDataUrl = await generateQRCodeDataURL(redirectUrl, logoOptions)
 
     return NextResponse.json({
       ...qrCode,
@@ -52,8 +67,20 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
+    const supabase = await createClient()
 
-    const { error } = await supabase.from('qr_codes').delete().eq('id', id)
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Delete only if owned by user
+    const { error } = await supabase
+      .from('qr_codes')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id)
 
     if (error) {
       console.error('Error deleting QR code:', error)
@@ -74,18 +101,30 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params
+    const supabase = await createClient()
+
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = await request.json()
 
     const updateData: Record<string, unknown> = {}
     if (body.destinationUrl !== undefined) updateData.destination_url = body.destinationUrl
     if (body.title !== undefined) updateData.title = body.title
     if (body.isActive !== undefined) updateData.is_active = body.isActive
+    if (body.centerImageType !== undefined) updateData.center_image_type = body.centerImageType
+    if (body.centerImageRef !== undefined) updateData.center_image_ref = body.centerImageRef
     updateData.updated_at = new Date().toISOString()
 
+    // Update only if owned by user
     const { data: qrCode, error } = await supabase
       .from('qr_codes')
       .update(updateData)
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
       .single()
 

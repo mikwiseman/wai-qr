@@ -1,0 +1,44 @@
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+
+export async function GET() {
+  try {
+    const supabase = await createClient()
+
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Get user's uploaded images
+    const { data: images, error } = await supabase
+      .from('user_images')
+      .select('id, storage_path, original_filename, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Database error:', error)
+      return NextResponse.json({ images: [] })
+    }
+
+    // Convert storage paths to public URLs
+    const imagesWithUrls = images.map(image => {
+      const { data: { publicUrl } } = supabase.storage
+        .from('qr-center-images')
+        .getPublicUrl(image.storage_path)
+
+      return {
+        id: image.id,
+        url: publicUrl,
+        filename: image.original_filename || 'Uploaded image',
+      }
+    })
+
+    return NextResponse.json({ images: imagesWithUrls })
+  } catch (error) {
+    console.error('Error fetching images:', error)
+    return NextResponse.json({ images: [] })
+  }
+}

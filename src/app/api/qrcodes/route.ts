@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
 import { generateShortCode } from '@/lib/shortcode'
+import { CenterImageType } from '@/lib/supabase'
 
-// GET /api/qrcodes - List all QR codes with scan counts
+// GET /api/qrcodes - List user's QR codes with scan counts
 export async function GET() {
   try {
+    const supabase = await createClient()
+
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { data: qrCodes, error } = await supabase
       .from('qr_codes')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -17,7 +27,7 @@ export async function GET() {
 
     // Get scan counts for each QR code
     const qrCodesWithCounts = await Promise.all(
-      qrCodes.map(async (qr) => {
+      (qrCodes || []).map(async (qr) => {
         const { count } = await supabase
           .from('scans')
           .select('*', { count: 'exact', head: true })
@@ -37,7 +47,15 @@ export async function GET() {
 // POST /api/qrcodes - Create a new QR code
 export async function POST(request: NextRequest) {
   try {
-    const { destinationUrl, title } = await request.json()
+    const supabase = await createClient()
+
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { destinationUrl, title, centerImageType, centerImageRef } = await request.json()
 
     if (!destinationUrl) {
       return NextResponse.json({ error: 'Destination URL is required' }, { status: 400 })
@@ -52,12 +70,19 @@ export async function POST(request: NextRequest) {
 
     const shortCode = generateShortCode()
 
+    // Validate center image type
+    const validTypes: CenterImageType[] = ['default', 'preset', 'custom', 'none']
+    const imageType: CenterImageType = validTypes.includes(centerImageType) ? centerImageType : 'default'
+
     const { data: qrCode, error } = await supabase
       .from('qr_codes')
       .insert({
+        user_id: user.id,
         short_code: shortCode,
         destination_url: destinationUrl,
         title: title || null,
+        center_image_type: imageType,
+        center_image_ref: centerImageRef || null,
       })
       .select()
       .single()

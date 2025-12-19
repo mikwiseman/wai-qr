@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-import { generateQRCodeBuffer } from '@/lib/qrcode'
+import { generateQRCodeBuffer, LogoOptions } from '@/lib/qrcode'
+import { CenterImageType } from '@/lib/supabase'
 
 // GET /api/qr/[code] - Download QR code as PNG
 export async function GET(
@@ -23,7 +24,13 @@ export async function GET(
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
     const redirectUrl = `${baseUrl}/r/${qrCode.short_code}`
 
-    const buffer = await generateQRCodeBuffer(redirectUrl)
+    // Build logo options from stored settings
+    const logoOptions: LogoOptions = {
+      type: (qrCode.center_image_type as CenterImageType) || 'default',
+      reference: qrCode.center_image_ref || undefined,
+    }
+
+    const buffer = await generateQRCodeBuffer(redirectUrl, logoOptions)
 
     return new NextResponse(new Uint8Array(buffer), {
       headers: {

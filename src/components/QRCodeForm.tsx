@@ -2,10 +2,15 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import ImagePicker from './ImagePicker'
+import { CenterImageType } from '@/lib/supabase'
 
 export default function QRCodeForm() {
   const [url, setUrl] = useState('')
   const [title, setTitle] = useState('')
+  const [centerImage, setCenterImage] = useState<{ type: CenterImageType; reference?: string }>({
+    type: 'default',
+  })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
@@ -19,12 +24,18 @@ export default function QRCodeForm() {
       const response = await fetch('/api/qrcodes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ destinationUrl: url, title }),
+        body: JSON.stringify({
+          destinationUrl: url,
+          title,
+          centerImageType: centerImage.type,
+          centerImageRef: centerImage.reference,
+        }),
       })
 
       if (response.ok) {
         setUrl('')
         setTitle('')
+        setCenterImage({ type: 'default' })
         router.refresh()
       } else {
         const data = await response.json()
@@ -67,6 +78,9 @@ export default function QRCodeForm() {
           required
         />
       </div>
+
+      <ImagePicker value={centerImage} onChange={setCenterImage} />
+
       {error && <p className="text-red-500 text-sm">{error}</p>}
       <button
         type="submit"

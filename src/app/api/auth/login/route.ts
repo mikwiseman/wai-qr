@@ -1,32 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyPassword, getAuthCookie } from '@/lib/auth'
+import { createClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
   try {
-    const { password } = await request.json()
+    const { email } = await request.json()
 
-    // Debug: log env var status
-    const envPassword = process.env.AUTH_PASSWORD
-    console.log('AUTH_PASSWORD is set:', !!envPassword)
-    console.log('AUTH_PASSWORD length:', envPassword?.length || 0)
-
-    if (!password) {
-      return NextResponse.json({ error: 'Password required' }, { status: 400 })
+    if (!email) {
+      return NextResponse.json({ error: 'Email required' }, { status: 400 })
     }
 
-    const isValid = verifyPassword(password)
-    console.log('Password valid:', isValid)
-
-    if (!isValid) {
-      return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return NextResponse.json({ error: 'Invalid email format' }, { status: 400 })
     }
 
-    const cookie = getAuthCookie(true)
-    const response = NextResponse.json({ success: true })
-    response.headers.set('Set-Cookie', cookie)
+    const supabase = await createClient()
 
-    return response
-  } catch {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${request.nextUrl.origin}/auth/confirm`,
+      },
+    })
+
+    if (error) {
+      console.error('Magic link error:', error)
+      return NextResponse.json(
+        { error: 'Failed to send magic link. Please try again.' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Check your email for the login link!'
+    })
+  } catch (error) {
+    console.error('Login error:', error)
     return NextResponse.json({ error: 'Login failed' }, { status: 500 })
   }
 }

@@ -1,5 +1,10 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { createClient as createBrowserClientBase, SupabaseClient } from '@supabase/supabase-js'
 
+// Re-export the new SSR-compatible clients
+export { createClient as createBrowserClient } from './supabase/client'
+export { createClient as createServerClient } from './supabase/server'
+
+// Legacy singleton client for backward compatibility with existing database code
 let supabaseInstance: SupabaseClient | null = null
 
 export function getSupabase(): SupabaseClient {
@@ -12,10 +17,10 @@ export function getSupabase(): SupabaseClient {
 
   if (!supabaseUrl || !supabaseAnonKey) {
     // Return a placeholder client for build time
-    return createClient('https://placeholder.supabase.co', 'placeholder-key')
+    return createBrowserClientBase('https://placeholder.supabase.co', 'placeholder-key')
   }
 
-  supabaseInstance = createClient(supabaseUrl, supabaseAnonKey)
+  supabaseInstance = createBrowserClientBase(supabaseUrl, supabaseAnonKey)
   return supabaseInstance
 }
 
@@ -28,6 +33,8 @@ export const supabase = new Proxy({} as SupabaseClient, {
 })
 
 // Types for our database tables
+export type CenterImageType = 'default' | 'preset' | 'custom' | 'none'
+
 export interface QRCode {
   id: string
   short_code: string
@@ -36,6 +43,9 @@ export interface QRCode {
   created_at: string
   updated_at: string
   is_active: boolean
+  user_id: string | null
+  center_image_type: CenterImageType
+  center_image_ref: string | null
 }
 
 export interface Scan {
@@ -56,4 +66,13 @@ export interface Scan {
   longitude: number | null
   referrer: string | null
   user_agent: string | null
+}
+
+export interface UserImage {
+  id: string
+  user_id: string
+  storage_path: string
+  original_filename: string | null
+  file_size: number | null
+  created_at: string
 }
