@@ -8,7 +8,7 @@ export default function LoginPage() {
         <h1 className="text-2xl font-bold text-center mb-2 text-gray-900">
           QR Analytics
         </h1>
-        <p className="text-gray-700 text-center mb-6">
+        <p className="text-gray-900 text-center mb-6">
           Sign in with your email address
         </p>
         <Suspense fallback={<div>Loading...</div>}>
