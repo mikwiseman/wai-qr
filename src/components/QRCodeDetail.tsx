@@ -87,7 +87,7 @@ export default function QRCodeDetail({ qrCode }: { qrCode: QRCodeWithDetails }) 
             />
             <div className="text-center mb-4">
               <p className="text-sm text-black mb-1">Redirect URL:</p>
-              <code className="text-xs bg-gray-100 px-2 py-1 rounded break-all">
+              <code className="text-xs bg-gray-100 px-2 py-1 rounded break-all text-black">
                 {qrCode.redirectUrl}
               </code>
             </div>
