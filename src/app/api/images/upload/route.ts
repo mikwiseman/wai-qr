@@ -10,12 +10,6 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const formData = await request.formData()
     const file = formData.get('file') as File | null
 
@@ -47,7 +41,7 @@ export async function POST(request: NextRequest) {
       .toBuffer()
 
     // Generate unique filename
-    const filename = `${user.id}/${nanoid()}.png`
+    const filename = `uploads/${nanoid()}.png`
 
     // Upload to Supabase Storage
     const { error: uploadError } = await supabase.storage
@@ -71,7 +65,6 @@ export async function POST(request: NextRequest) {
     const { data: imageRecord, error: dbError } = await supabase
       .from('user_images')
       .insert({
-        user_id: user.id,
         storage_path: filename,
         original_filename: file.name,
         file_size: processedBuffer.length,

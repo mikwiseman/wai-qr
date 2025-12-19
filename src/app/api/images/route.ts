@@ -5,17 +5,10 @@ export async function GET() {
   try {
     const supabase = await createClient()
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Get user's uploaded images
+    // Get all uploaded images
     const { data: images, error } = await supabase
       .from('user_images')
       .select('id, storage_path, original_filename, created_at')
-      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
     if (error) {

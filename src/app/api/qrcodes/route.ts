@@ -3,21 +3,14 @@ import { createClient } from '@/lib/supabase/server'
 import { generateShortCode } from '@/lib/shortcode'
 import { CenterImageType } from '@/lib/supabase'
 
-// GET /api/qrcodes - List user's QR codes with scan counts
+// GET /api/qrcodes - List all QR codes with scan counts
 export async function GET() {
   try {
     const supabase = await createClient()
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const { data: qrCodes, error } = await supabase
       .from('qr_codes')
       .select('*')
-      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -49,12 +42,6 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const { destinationUrl, title, centerImageType, centerImageRef } = await request.json()
 
     if (!destinationUrl) {
@@ -77,7 +64,6 @@ export async function POST(request: NextRequest) {
     const { data: qrCode, error } = await supabase
       .from('qr_codes')
       .insert({
-        user_id: user.id,
         short_code: shortCode,
         destination_url: destinationUrl,
         title: title || null,

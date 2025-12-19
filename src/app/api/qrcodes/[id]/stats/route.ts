@@ -9,18 +9,11 @@ export async function GET(
     const { id } = await params
     const supabase = await createClient()
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Verify ownership
+    // Verify QR code exists
     const { data: qrCode, error: qrError } = await supabase
       .from('qr_codes')
       .select('id')
       .eq('id', id)
-      .eq('user_id', user.id)
       .single()
 
     if (qrError || !qrCode) {

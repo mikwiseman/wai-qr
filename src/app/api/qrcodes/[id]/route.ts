@@ -12,17 +12,10 @@ export async function GET(
     const { id } = await params
     const supabase = await createClient()
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const { data: qrCode, error } = await supabase
       .from('qr_codes')
       .select('*')
       .eq('id', id)
-      .eq('user_id', user.id)
       .single()
 
     if (error || !qrCode) {
@@ -69,18 +62,10 @@ export async function DELETE(
     const { id } = await params
     const supabase = await createClient()
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Delete only if owned by user
     const { error } = await supabase
       .from('qr_codes')
       .delete()
       .eq('id', id)
-      .eq('user_id', user.id)
 
     if (error) {
       console.error('Error deleting QR code:', error)
@@ -103,12 +88,6 @@ export async function PATCH(
     const { id } = await params
     const supabase = await createClient()
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const body = await request.json()
 
     const updateData: Record<string, unknown> = {}
@@ -119,12 +98,10 @@ export async function PATCH(
     if (body.centerImageRef !== undefined) updateData.center_image_ref = body.centerImageRef
     updateData.updated_at = new Date().toISOString()
 
-    // Update only if owned by user
     const { data: qrCode, error } = await supabase
       .from('qr_codes')
       .update(updateData)
       .eq('id', id)
-      .eq('user_id', user.id)
       .select()
       .single()
 

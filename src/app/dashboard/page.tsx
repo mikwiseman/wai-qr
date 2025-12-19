@@ -1,7 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import QRCodeForm from '@/components/QRCodeForm'
 import QRCodeList from '@/components/QRCodeList'
-import LogoutButton from '@/components/LogoutButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,7 +38,6 @@ export default async function DashboardPage() {
       <header className="bg-white shadow">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">QR Code Dashboard</h1>
-          <LogoutButton />
         </div>
       </header>
       <main className="container mx-auto px-4 py-8">
