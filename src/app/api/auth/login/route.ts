@@ -17,10 +17,12 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin
+    
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${request.nextUrl.origin}/auth/confirm`,
+        emailRedirectTo: `${siteUrl}/auth/confirm`,
       },
     })
 
