@@ -26,6 +26,10 @@ body {
 }
 
 ::placeholder {
-  color: #000000;
+  color: #6b7280;
   opacity: 1;
+}
+
+input, textarea {
+  color: #000000;
 }
