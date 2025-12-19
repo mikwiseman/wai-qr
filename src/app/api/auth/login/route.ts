@@ -27,13 +27,25 @@ export async function POST(request: NextRequest) {
     }
   )
 
-  // Get site URL from environment or request
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin
+  // Get site origin from environment or request
+  const fallbackOrigin = new URL(request.url).origin
+  const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL
+  let siteOrigin = fallbackOrigin
+
+  if (rawSiteUrl) {
+    try {
+      siteOrigin = new URL(rawSiteUrl).origin
+    } catch {
+      siteOrigin = fallbackOrigin
+    }
+  }
+
+  const emailRedirectTo = new URL('/auth/callback', siteOrigin).toString()
 
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${siteUrl}/auth/callback`,
+      emailRedirectTo,
     },
   })
 
