@@ -19,7 +19,7 @@ export default function BrowserOSChart({ browserData, osData }: Props) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900">Browser Distribution</h3>
+        <h3 className="text-lg font-semibold mb-4 text-black">Browser Distribution</h3>
         {hasBrowserData ? (
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={browserData} layout="vertical" margin={{ left: 60 }}>
@@ -31,14 +31,14 @@ export default function BrowserOSChart({ browserData, osData }: Props) {
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <div className="h-[250px] flex items-center justify-center text-gray-500">
+          <div className="h-[250px] flex items-center justify-center text-black">
             No browser data yet
           </div>
         )}
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900">Operating System</h3>
+        <h3 className="text-lg font-semibold mb-4 text-black">Operating System</h3>
         {hasOSData ? (
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={osData} layout="vertical" margin={{ left: 60 }}>
@@ -50,7 +50,7 @@ export default function BrowserOSChart({ browserData, osData }: Props) {
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <div className="h-[250px] flex items-center justify-center text-gray-500">
+          <div className="h-[250px] flex items-center justify-center text-black">
             No OS data yet
           </div>
         )}

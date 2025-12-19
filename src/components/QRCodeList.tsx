@@ -26,7 +26,7 @@ export default function QRCodeList({ qrCodes }: { qrCodes: QRCodeWithCount[] }) 
 
   if (qrCodes.length === 0) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow text-center text-gray-500">
+      <div className="bg-white p-6 rounded-lg shadow text-center text-black">
         No QR codes yet. Create one to get started!
       </div>
     )
@@ -37,22 +37,22 @@ export default function QRCodeList({ qrCodes }: { qrCodes: QRCodeWithCount[] }) 
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
               Title
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
               Destination
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
               Scans
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
               Created
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
               Status
             </th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-right text-xs font-medium text-black uppercase tracking-wider">
               Actions
             </th>
           </tr>
@@ -68,12 +68,12 @@ export default function QRCodeList({ qrCodes }: { qrCodes: QRCodeWithCount[] }) 
                   {qr.title || 'Untitled'}
                 </Link>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs truncate">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-black max-w-xs truncate">
                 <a
                   href={qr.destination_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-gray-700"
+                  className="hover:text-black"
                 >
                   {qr.destination_url}
                 </a>
@@ -83,7 +83,7 @@ export default function QRCodeList({ qrCodes }: { qrCodes: QRCodeWithCount[] }) 
                   {qr.scan_count}
                 </span>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
                 {new Date(qr.created_at).toLocaleDateString()}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">

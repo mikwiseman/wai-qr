@@ -101,7 +101,7 @@ export default function ImagePicker({ value, onChange }: ImagePickerProps) {
 
   return (
     <div className="space-y-4">
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-medium text-black">
         Center Image
       </label>
 
@@ -116,12 +116,12 @@ export default function ImagePicker({ value, onChange }: ImagePickerProps) {
               : 'border-gray-200 hover:border-gray-300'
           }`}
         >
-          <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-gray-400">
+          <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-black">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
-          <span className="text-xs text-gray-600 mt-1">No Logo</span>
+          <span className="text-xs text-black mt-1">No Logo</span>
         </button>
 
         <button
@@ -142,14 +142,14 @@ export default function ImagePicker({ value, onChange }: ImagePickerProps) {
               className="object-contain"
             />
           </div>
-          <span className="text-xs text-gray-600 mt-1">Default</span>
+          <span className="text-xs text-black mt-1">Default</span>
         </button>
       </div>
 
       {/* Presets */}
       {presets.length > 0 && (
         <div>
-          <p className="text-sm text-gray-500 mb-2">Presets</p>
+          <p className="text-sm text-black mb-2">Presets</p>
           <div className="flex flex-wrap gap-2">
             {presets.filter(p => p.id !== 'default').map(preset => (
               <button
@@ -171,7 +171,7 @@ export default function ImagePicker({ value, onChange }: ImagePickerProps) {
                     className="object-contain"
                   />
                 </div>
-                <span className="text-xs text-gray-600 mt-1">{preset.name}</span>
+                <span className="text-xs text-black mt-1">{preset.name}</span>
               </button>
             ))}
           </div>
@@ -180,7 +180,7 @@ export default function ImagePicker({ value, onChange }: ImagePickerProps) {
 
       {/* Upload Section */}
       <div>
-        <p className="text-sm text-gray-500 mb-2">Upload Custom</p>
+        <p className="text-sm text-black mb-2">Upload Custom</p>
         <input
           ref={fileInputRef}
           type="file"
@@ -191,13 +191,13 @@ export default function ImagePicker({ value, onChange }: ImagePickerProps) {
         />
         <label
           htmlFor="image-upload"
-          className={`inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50 cursor-pointer ${
+          className={`inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md text-sm text-black hover:bg-gray-50 cursor-pointer ${
             uploading ? 'opacity-50 cursor-not-allowed' : ''
           }`}
         >
           {uploading ? (
             <>
-              <svg className="animate-spin h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin h-4 w-4 text-black" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
@@ -212,7 +212,7 @@ export default function ImagePicker({ value, onChange }: ImagePickerProps) {
             </>
           )}
         </label>
-        <p className="text-xs text-gray-400 mt-1">PNG or JPEG, max 2MB</p>
+        <p className="text-xs text-black mt-1">PNG or JPEG, max 2MB</p>
       </div>
 
       {error && <p className="text-red-500 text-sm">{error}</p>}
@@ -220,7 +220,7 @@ export default function ImagePicker({ value, onChange }: ImagePickerProps) {
       {/* User Uploaded Images */}
       {userImages.length > 0 && (
         <div>
-          <p className="text-sm text-gray-500 mb-2">Your Uploads</p>
+          <p className="text-sm text-black mb-2">Your Uploads</p>
           <div className="flex flex-wrap gap-2">
             {userImages.map(image => (
               <button

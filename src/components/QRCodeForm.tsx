@@ -50,9 +50,9 @@ export default function QRCodeForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow">
-      <h2 className="text-xl font-semibold text-gray-900">Create New QR Code</h2>
+      <h2 className="text-xl font-semibold text-black">Create New QR Code</h2>
       <div>
-        <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="title" className="block text-sm font-medium text-black">
           Title (optional)
         </label>
         <input
@@ -65,7 +65,7 @@ export default function QRCodeForm() {
         />
       </div>
       <div>
-        <label htmlFor="url" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="url" className="block text-sm font-medium text-black">
           Destination URL
         </label>
         <input

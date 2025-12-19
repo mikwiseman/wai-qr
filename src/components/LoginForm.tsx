@@ -50,7 +50,7 @@ export default function LoginForm() {
       )}
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-900">
+        <label htmlFor="email" className="block text-sm font-medium text-black">
           Email Address
         </label>
         <input
@@ -58,7 +58,7 @@ export default function LoginForm() {
           id="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 placeholder:text-gray-500"
+          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 text-black placeholder:text-black"
           placeholder="you@example.com"
           required
           autoFocus
@@ -81,7 +81,7 @@ export default function LoginForm() {
         {loading ? 'Sending...' : 'Send Magic Link'}
       </button>
 
-      <p className="text-sm text-gray-700 text-center">
+      <p className="text-sm text-black text-center">
         We&apos;ll send you a magic link to sign in instantly.
       </p>
     </form>

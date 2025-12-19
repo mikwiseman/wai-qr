@@ -70,7 +70,7 @@ export default function QRCodeDetail({ qrCode }: { qrCode: QRCodeWithDetails }) 
           >
             ← Back to Dashboard
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">{qrCode.title || 'Untitled QR Code'}</h1>
+          <h1 className="text-3xl font-bold text-black">{qrCode.title || 'Untitled QR Code'}</h1>
         </div>
       </div>
 
@@ -86,7 +86,7 @@ export default function QRCodeDetail({ qrCode }: { qrCode: QRCodeWithDetails }) 
               className="mb-4"
             />
             <div className="text-center mb-4">
-              <p className="text-sm text-gray-500 mb-1">Redirect URL:</p>
+              <p className="text-sm text-black mb-1">Redirect URL:</p>
               <code className="text-xs bg-gray-100 px-2 py-1 rounded break-all">
                 {qrCode.redirectUrl}
               </code>
@@ -100,7 +100,7 @@ export default function QRCodeDetail({ qrCode }: { qrCode: QRCodeWithDetails }) 
               </button>
               <button
                 onClick={handleCopyLink}
-                className="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors text-sm"
+                className="bg-gray-100 text-black px-4 py-2 rounded-md hover:bg-gray-200 transition-colors text-sm"
               >
                 Copy Link
               </button>
@@ -110,11 +110,11 @@ export default function QRCodeDetail({ qrCode }: { qrCode: QRCodeWithDetails }) 
 
         {/* Stats Summary */}
         <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900">Details</h2>
+          <h2 className="text-xl font-semibold mb-4 text-black">Details</h2>
           <dl className="grid grid-cols-2 gap-4">
             <div>
-              <dt className="text-sm text-gray-500">Destination URL</dt>
-              <dd className="text-sm font-medium text-gray-900 break-all">
+              <dt className="text-sm text-black">Destination URL</dt>
+              <dd className="text-sm font-medium text-black break-all">
                 <a
                   href={qrCode.destination_url}
                   target="_blank"
@@ -126,17 +126,17 @@ export default function QRCodeDetail({ qrCode }: { qrCode: QRCodeWithDetails }) 
               </dd>
             </div>
             <div>
-              <dt className="text-sm text-gray-500">Total Scans</dt>
+              <dt className="text-sm text-black">Total Scans</dt>
               <dd className="text-2xl font-bold text-blue-600">{stats?.totalScans || 0}</dd>
             </div>
             <div>
-              <dt className="text-sm text-gray-500">Created</dt>
-              <dd className="text-sm font-medium text-gray-900">
+              <dt className="text-sm text-black">Created</dt>
+              <dd className="text-sm font-medium text-black">
                 {new Date(qrCode.created_at).toLocaleDateString()}
               </dd>
             </div>
             <div>
-              <dt className="text-sm text-gray-500">Status</dt>
+              <dt className="text-sm text-black">Status</dt>
               <dd>
                 <span
                   className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -152,7 +152,7 @@ export default function QRCodeDetail({ qrCode }: { qrCode: QRCodeWithDetails }) 
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-gray-500">Loading analytics...</div>
+        <div className="text-center py-12 text-black">Loading analytics...</div>
       ) : stats ? (
         <>
           <ScansOverTimeChart data={stats.scansOverTime} />
@@ -167,7 +167,7 @@ export default function QRCodeDetail({ qrCode }: { qrCode: QRCodeWithDetails }) 
           <RecentScansTable scans={stats.recentScans as never[]} />
         </>
       ) : (
-        <div className="text-center py-12 text-gray-500">Failed to load analytics</div>
+        <div className="text-center py-12 text-black">Failed to load analytics</div>
       )}
     </div>
   )

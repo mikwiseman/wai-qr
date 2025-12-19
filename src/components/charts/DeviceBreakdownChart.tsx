@@ -14,8 +14,8 @@ export default function DeviceBreakdownChart({ data }: { data: DataPoint[] }) {
   if (data.length === 0) {
     return (
       <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900">Device Breakdown</h3>
-        <div className="h-[300px] flex items-center justify-center text-gray-500">
+        <h3 className="text-lg font-semibold mb-4 text-black">Device Breakdown</h3>
+        <div className="h-[300px] flex items-center justify-center text-black">
           No device data yet
         </div>
       </div>
@@ -24,7 +24,7 @@ export default function DeviceBreakdownChart({ data }: { data: DataPoint[] }) {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow">
-      <h3 className="text-lg font-semibold mb-4 text-gray-900">Device Breakdown</h3>
+      <h3 className="text-lg font-semibold mb-4 text-black">Device Breakdown</h3>
       <ResponsiveContainer width="100%" height={300}>
         <PieChart>
           <Pie

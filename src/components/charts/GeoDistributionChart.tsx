@@ -10,8 +10,8 @@ export default function GeoDistributionChart({ data }: { data: DataPoint[] }) {
   if (data.length === 0) {
     return (
       <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900">Geographic Distribution</h3>
-        <div className="h-[200px] flex items-center justify-center text-gray-500">
+        <h3 className="text-lg font-semibold mb-4 text-black">Geographic Distribution</h3>
+        <div className="h-[200px] flex items-center justify-center text-black">
           No geographic data yet
         </div>
       </div>
@@ -22,18 +22,18 @@ export default function GeoDistributionChart({ data }: { data: DataPoint[] }) {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow">
-      <h3 className="text-lg font-semibold mb-4 text-gray-900">Geographic Distribution</h3>
+      <h3 className="text-lg font-semibold mb-4 text-black">Geographic Distribution</h3>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-4 py-2 text-left text-xs font-medium text-black uppercase">
                 Country
               </th>
-              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+              <th className="px-4 py-2 text-right text-xs font-medium text-black uppercase">
                 Scans
               </th>
-              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+              <th className="px-4 py-2 text-right text-xs font-medium text-black uppercase">
                 Percentage
               </th>
             </tr>
@@ -41,7 +41,7 @@ export default function GeoDistributionChart({ data }: { data: DataPoint[] }) {
           <tbody className="bg-white divide-y divide-gray-200">
             {data.map((item, index) => (
               <tr key={index} className="hover:bg-gray-50">
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-black">
                   {item.countryCode && (
                     <span className="mr-2">
                       {getFlagEmoji(item.countryCode)}
@@ -49,10 +49,10 @@ export default function GeoDistributionChart({ data }: { data: DataPoint[] }) {
                   )}
                   {item.country}
                 </td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-black text-right">
                   {item.value}
                 </td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-black text-right">
                   {((item.value / total) * 100).toFixed(1)}%
                 </td>
               </tr>
