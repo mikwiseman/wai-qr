@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createPublicSupabase, CenterImageType } from '@/lib/supabase'
+import { createSupabase, CenterImageType } from '@/lib/supabase'
 import { generateQRCodeBuffer, LogoOptions } from '@/lib/qrcode'
 
-const supabase = createPublicSupabase()
+const supabase = createSupabase()
 
 // GET /api/qr/[code] - Download QR code as PNG
 export async function GET(

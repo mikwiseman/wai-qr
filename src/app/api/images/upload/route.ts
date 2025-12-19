@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabase } from '@/lib/supabase'
+import { createSupabase } from '@/lib/supabase'
 import sharp from 'sharp'
 import { nanoid } from 'nanoid'
 
@@ -8,13 +8,7 @@ const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg']
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabase()
-
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const supabase = createSupabase()
 
     const formData = await request.formData()
     const file = formData.get('file') as File | null
@@ -47,7 +41,7 @@ export async function POST(request: NextRequest) {
       .toBuffer()
 
     // Generate unique filename
-    const filename = `${user.id}/${nanoid()}.png`
+    const filename = `uploads/${nanoid()}.png`
 
     // Upload to Supabase Storage
     const { error: uploadError } = await supabase.storage
@@ -71,7 +65,6 @@ export async function POST(request: NextRequest) {
     const { data: imageRecord, error: dbError } = await supabase
       .from('user_images')
       .insert({
-        user_id: user.id,
         storage_path: filename,
         original_filename: file.name,
         file_size: processedBuffer.length,

@@ -1,22 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabase, CenterImageType } from '@/lib/supabase'
+import { createSupabase, CenterImageType } from '@/lib/supabase'
 import { generateShortCode } from '@/lib/shortcode'
 
-// GET /api/qrcodes - List user's QR codes with scan counts
+// GET /api/qrcodes - List all QR codes with scan counts
 export async function GET() {
   try {
-    const supabase = await createServerSupabase()
-
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const supabase = createSupabase()
 
     const { data: qrCodes, error } = await supabase
       .from('qr_codes')
       .select('*')
-      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -46,13 +39,7 @@ export async function GET() {
 // POST /api/qrcodes - Create a new QR code
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabase()
-
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const supabase = createSupabase()
 
     const { destinationUrl, title, centerImageType, centerImageRef } = await request.json()
 
@@ -76,7 +63,6 @@ export async function POST(request: NextRequest) {
     const { data: qrCode, error } = await supabase
       .from('qr_codes')
       .insert({
-        user_id: user.id,
         short_code: shortCode,
         destination_url: destinationUrl,
         title: title || null,

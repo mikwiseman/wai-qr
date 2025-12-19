@@ -1,13 +1,12 @@
-import { createServerSupabase } from '@/lib/supabase'
+import { createSupabase } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
 import { generateQRCodeDataURL } from '@/lib/qrcode'
 import QRCodeDetail from '@/components/QRCodeDetail'
-import LogoutButton from '@/components/LogoutButton'
 
 export const dynamic = 'force-dynamic'
 
 async function getQRCode(id: string) {
-  const supabase = await createServerSupabase()
+  const supabase = createSupabase()
 
   const { data: qrCode, error } = await supabase
     .from('qr_codes')
@@ -55,9 +54,8 @@ export default async function QRCodeDetailPage({
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="container mx-auto px-4 py-4">
           <h1 className="text-2xl font-bold text-gray-900">QR Code Analytics</h1>
-          <LogoutButton />
         </div>
       </header>
       <main className="container mx-auto px-4 py-8">

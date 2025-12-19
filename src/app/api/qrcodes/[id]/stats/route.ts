@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabase } from '@/lib/supabase'
+import { createSupabase } from '@/lib/supabase'
 
 export async function GET(
   request: NextRequest,
@@ -7,20 +7,13 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const supabase = await createServerSupabase()
+    const supabase = createSupabase()
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Verify ownership
+    // Verify QR code exists
     const { data: qrCode, error: qrError } = await supabase
       .from('qr_codes')
       .select('id')
       .eq('id', id)
-      .eq('user_id', user.id)
       .single()
 
     if (qrError || !qrCode) {

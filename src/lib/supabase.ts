@@ -1,65 +1,14 @@
-import { createBrowserClient, createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
-import { cookies } from 'next/headers'
-import type { NextRequest, NextResponse } from 'next/server'
 
 // Environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 /**
- * Simple client for public routes (no auth needed)
+ * Simple public Supabase client - use everywhere
  */
-export function createPublicSupabase() {
+export function createSupabase() {
   return createClient(supabaseUrl, supabaseAnonKey)
-}
-
-/**
- * Browser client - use in client components
- */
-export function createBrowserSupabase() {
-  return createBrowserClient(supabaseUrl, supabaseAnonKey)
-}
-
-/**
- * Server client - use in server components and server actions
- */
-export async function createServerSupabase() {
-  const cookieStore = await cookies()
-
-  return createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll: () => cookieStore.getAll(),
-      setAll: (cookiesToSet) => {
-        try {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          )
-        } catch {
-          // Called from Server Component - ignore
-        }
-      },
-    },
-  })
-}
-
-/**
- * Route handler client - use in API routes
- * Returns client and a function to get the response with cookies
- */
-export function createRouteSupabase(request: NextRequest, response: NextResponse) {
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll: () => request.cookies.getAll(),
-      setAll: (cookiesToSet) => {
-        cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options)
-        })
-      },
-    },
-  })
-
-  return supabase
 }
 
 // Types for database tables

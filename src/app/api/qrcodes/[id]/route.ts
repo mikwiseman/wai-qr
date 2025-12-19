@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabase, CenterImageType } from '@/lib/supabase'
+import { createSupabase, CenterImageType } from '@/lib/supabase'
 import { generateQRCodeDataURL, LogoOptions } from '@/lib/qrcode'
 
 // GET /api/qrcodes/[id] - Get single QR code with full details
@@ -9,19 +9,12 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const supabase = await createServerSupabase()
-
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const supabase = createSupabase()
 
     const { data: qrCode, error } = await supabase
       .from('qr_codes')
       .select('*')
       .eq('id', id)
-      .eq('user_id', user.id)
       .single()
 
     if (error || !qrCode) {
@@ -66,20 +59,12 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
-    const supabase = await createServerSupabase()
+    const supabase = createSupabase()
 
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Delete only if owned by user
     const { error } = await supabase
       .from('qr_codes')
       .delete()
       .eq('id', id)
-      .eq('user_id', user.id)
 
     if (error) {
       console.error('Error deleting QR code:', error)
@@ -100,13 +85,7 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params
-    const supabase = await createServerSupabase()
-
-    // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const supabase = createSupabase()
 
     const body = await request.json()
 
@@ -118,12 +97,10 @@ export async function PATCH(
     if (body.centerImageRef !== undefined) updateData.center_image_ref = body.centerImageRef
     updateData.updated_at = new Date().toISOString()
 
-    // Update only if owned by user
     const { data: qrCode, error } = await supabase
       .from('qr_codes')
       .update(updateData)
       .eq('id', id)
-      .eq('user_id', user.id)
       .select()
       .single()
 
