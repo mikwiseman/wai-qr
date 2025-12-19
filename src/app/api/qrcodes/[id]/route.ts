@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServerSupabase, CenterImageType } from '@/lib/supabase'
 import { generateQRCodeDataURL, LogoOptions } from '@/lib/qrcode'
-import { CenterImageType } from '@/lib/supabase'
 
 // GET /api/qrcodes/[id] - Get single QR code with full details
 export async function GET(
@@ -10,7 +9,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const supabase = await createClient()
+    const supabase = await createServerSupabase()
 
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -67,7 +66,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
-    const supabase = await createClient()
+    const supabase = await createServerSupabase()
 
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -101,7 +100,7 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params
-    const supabase = await createClient()
+    const supabase = await createServerSupabase()
 
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser()

@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { createServerSupabase } from '@/lib/supabase'
 import QRCodeForm from '@/components/QRCodeForm'
 import QRCodeList from '@/components/QRCodeList'
 import LogoutButton from '@/components/LogoutButton'
@@ -6,6 +6,8 @@ import LogoutButton from '@/components/LogoutButton'
 export const dynamic = 'force-dynamic'
 
 async function getQRCodes() {
+  const supabase = await createServerSupabase()
+
   const { data: qrCodes, error } = await supabase
     .from('qr_codes')
     .select('*')

@@ -1,38 +1,68 @@
-import { createClient as createBrowserClientBase, SupabaseClient } from '@supabase/supabase-js'
+import { createBrowserClient, createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
+import { cookies } from 'next/headers'
+import type { NextRequest, NextResponse } from 'next/server'
 
-// Re-export the new SSR-compatible clients
-export { createClient as createBrowserClient } from './supabase/client'
-export { createClient as createServerClient } from './supabase/server'
+// Environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// Legacy singleton client for backward compatibility with existing database code
-let supabaseInstance: SupabaseClient | null = null
-
-export function getSupabase(): SupabaseClient {
-  if (supabaseInstance) {
-    return supabaseInstance
-  }
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    // Return a placeholder client for build time
-    return createBrowserClientBase('https://placeholder.supabase.co', 'placeholder-key')
-  }
-
-  supabaseInstance = createBrowserClientBase(supabaseUrl, supabaseAnonKey)
-  return supabaseInstance
+/**
+ * Simple client for public routes (no auth needed)
+ */
+export function createPublicSupabase() {
+  return createClient(supabaseUrl, supabaseAnonKey)
 }
 
-// Export as getter for backward compatibility
-export const supabase = new Proxy({} as SupabaseClient, {
-  get(_, prop) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (getSupabase() as any)[prop]
-  }
-})
+/**
+ * Browser client - use in client components
+ */
+export function createBrowserSupabase() {
+  return createBrowserClient(supabaseUrl, supabaseAnonKey)
+}
 
-// Types for our database tables
+/**
+ * Server client - use in server components and server actions
+ */
+export async function createServerSupabase() {
+  const cookieStore = await cookies()
+
+  return createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll: () => cookieStore.getAll(),
+      setAll: (cookiesToSet) => {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          )
+        } catch {
+          // Called from Server Component - ignore
+        }
+      },
+    },
+  })
+}
+
+/**
+ * Route handler client - use in API routes
+ * Returns client and a function to get the response with cookies
+ */
+export function createRouteSupabase(request: NextRequest, response: NextResponse) {
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll: () => request.cookies.getAll(),
+      setAll: (cookiesToSet) => {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          response.cookies.set(name, value, options)
+        })
+      },
+    },
+  })
+
+  return supabase
+}
+
+// Types for database tables
 export type CenterImageType = 'default' | 'preset' | 'custom' | 'none'
 
 export interface QRCode {

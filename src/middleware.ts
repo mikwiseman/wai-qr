@@ -1,47 +1,50 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import { updateSession } from '@/lib/supabase/middleware'
+import { NextResponse, type NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 
-// Routes that don't require authentication
-const publicPaths = ['/login', '/r/', '/api/auth/', '/auth/']
-
-function isPublicPath(pathname: string): boolean {
-  return publicPaths.some(path => pathname.startsWith(path))
-}
+// Public routes that don't require authentication
+const PUBLIC_ROUTES = ['/login', '/auth/', '/api/auth/', '/r/']
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Skip static files and Next.js internals
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/favicon') ||
-    pathname.includes('.')
-  ) {
+  // Skip if public route
+  if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
     return NextResponse.next()
   }
 
-  // Skip public routes but still update session for token refresh
-  if (isPublicPath(pathname)) {
-    const { supabaseResponse } = await updateSession(request)
-    return supabaseResponse
-  }
+  // Create response to modify
+  let response = NextResponse.next({ request })
 
-  // Check Supabase authentication
-  const { user, supabaseResponse } = await updateSession(request)
+  // Create Supabase client
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => request.cookies.getAll(),
+        setAll: (cookiesToSet) => {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          response = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  // Check if user is authenticated
+  const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    // Redirect to login
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('from', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  return supabaseResponse
+  return response
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 }

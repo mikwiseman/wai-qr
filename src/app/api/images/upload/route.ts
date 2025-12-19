@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServerSupabase } from '@/lib/supabase'
 import sharp from 'sharp'
 import { nanoid } from 'nanoid'
 
@@ -8,7 +8,7 @@ const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg']
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerSupabase()
 
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser()

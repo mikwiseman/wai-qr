@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createPublicSupabase } from '@/lib/supabase'
 import { parseUserAgent } from '@/lib/user-agent'
 import { getGeoLocation, getClientIP } from '@/lib/geolocation'
+
+const supabase = createPublicSupabase()
 
 export async function GET(
   request: NextRequest,
