@@ -1,6 +1,6 @@
 import { createServerSupabase } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
-import { generateQRCodeDataURL } from '@/lib/qrcode'
+import { generateQRCodeDataURL, CenterImageType } from '@/lib/qrcode'
 import QRCodeDetail from '@/components/QRCodeDetail'
 import LogoutButton from '@/components/LogoutButton'
 
@@ -29,8 +29,11 @@ async function getQRCode(id: string) {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://waiqr.xyz'
   const redirectUrl = `${baseUrl}/r/${qrCode.short_code}`
 
-  // Generate QR code image as data URL
-  const qrImageDataUrl = await generateQRCodeDataURL(redirectUrl)
+  // Generate QR code image as data URL with the stored center image
+  const qrImageDataUrl = await generateQRCodeDataURL(redirectUrl, {
+    type: (qrCode.center_image_type as CenterImageType) || 'default',
+    reference: qrCode.center_image_ref || undefined,
+  })
 
   return {
     ...qrCode,

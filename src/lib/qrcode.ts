@@ -3,6 +3,8 @@ import sharp from 'sharp'
 import path from 'path'
 import { CenterImageType } from './supabase'
 
+export type { CenterImageType }
+
 const QR_SIZE = 400
 const LOGO_SIZE_PERCENT = 0.22 // Logo is 22% of QR code size (safe for H-level error correction)
 
