@@ -9,6 +9,15 @@ const nextConfig: NextConfig = {
         hostname: 'waiqr.xyz',
         pathname: '/uploads/**',
       },
+      {
+        // Allow any external images for user avatars/covers
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: '**',
+      },
     ],
   },
 };

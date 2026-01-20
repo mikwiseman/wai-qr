@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import QRCodeForm from '@/components/QRCodeForm'
 import QRCodeList from '@/components/QRCodeList'
 import LogoutButton from '@/components/LogoutButton'
@@ -55,7 +56,19 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-black">WaiQR Dashboard</h1>
+          <div className="flex items-center gap-6">
+            <Link href="/dashboard" className="text-2xl font-bold text-black hover:text-gray-700">
+              WaiQR
+            </Link>
+            <nav className="flex gap-4">
+              <Link href="/dashboard" className="text-violet-600 font-medium">
+                QR Codes
+              </Link>
+              <Link href="/dashboard/cards" className="text-gray-600 hover:text-gray-900">
+                Business Cards
+              </Link>
+            </nav>
+          </div>
           <LogoutButton />
         </div>
       </header>
