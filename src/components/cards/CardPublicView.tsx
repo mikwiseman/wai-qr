@@ -46,9 +46,10 @@ interface CardData {
 
 interface CardPublicViewProps {
   card: CardData
+  qrCodeDataUrl?: string
 }
 
-export default function CardPublicView({ card }: CardPublicViewProps) {
+export default function CardPublicView({ card, qrCodeDataUrl }: CardPublicViewProps) {
   const [showContactForm, setShowContactForm] = useState(false)
   const [contactSubmitted, setContactSubmitted] = useState(false)
 
@@ -260,6 +261,19 @@ export default function CardPublicView({ card }: CardPublicViewProps) {
 
           {/* QR Code and URL */}
           <div className="px-6 pb-6 text-center border-t border-gray-200/50 pt-4">
+            {qrCodeDataUrl && (
+              <div className="mb-4 flex justify-center">
+                <div className="bg-white p-3 rounded-xl shadow-sm">
+                  <img
+                    src={qrCodeDataUrl}
+                    alt="Scan to share this card"
+                    width={150}
+                    height={150}
+                    className="rounded"
+                  />
+                </div>
+              </div>
+            )}
             <p className={`text-xs ${theme.textSecondaryClass}`}>
               {baseUrl}/c/{card.shortCode}
             </p>

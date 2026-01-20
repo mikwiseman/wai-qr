@@ -3,6 +3,7 @@ import { headers } from 'next/headers'
 import { prisma } from '@/lib/db'
 import { parseUserAgent } from '@/lib/user-agent'
 import { getGeoLocation } from '@/lib/geolocation'
+import { generateQRCodeDataURL } from '@/lib/qrcode'
 import { Decimal } from '@/generated/prisma/runtime/library'
 import CardPublicView from '@/components/cards/CardPublicView'
 import { Metadata } from 'next'
@@ -108,6 +109,11 @@ export default async function CardPublicPage({ params }: PageProps) {
     })
     .catch(console.error)
 
+  // Generate QR code for the card URL
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://waiqr.xyz'
+  const cardUrl = `${baseUrl}/c/${card.shortCode}`
+  const qrCodeDataUrl = await generateQRCodeDataURL(cardUrl, { type: 'none' })
+
   // Transform card data for the component
   const cardData = {
     id: card.id,
@@ -143,5 +149,5 @@ export default async function CardPublicPage({ params }: PageProps) {
     })),
   }
 
-  return <CardPublicView card={cardData} />
+  return <CardPublicView card={cardData} qrCodeDataUrl={qrCodeDataUrl} />
 }
