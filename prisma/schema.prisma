@@ -14,9 +14,10 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  qrCodes    QRCode[]
-  userImages UserImage[]
-  magicLinks MagicLink[]
+  qrCodes       QRCode[]
+  userImages    UserImage[]
+  magicLinks    MagicLink[]
+  businessCards BusinessCard[]
 
   @@map("users")
 }
@@ -101,4 +102,161 @@ model UserImage {
 
   @@index([userId])
   @@map("user_images")
+}
+
+// ============================================
+// Business Cards Feature
+// ============================================
+
+model BusinessCard {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  shortCode       String   @unique @map("short_code")
+
+  // Profile Info
+  displayName     String   @map("display_name")
+  headline        String?
+  bio             String?  @db.Text
+  avatarUrl       String?  @map("avatar_url")
+  coverImageUrl   String?  @map("cover_image_url")
+
+  // Contact Info (for vCard)
+  email           String?
+  phone           String?
+  website         String?
+  company         String?
+  jobTitle        String?  @map("job_title")
+  location        String?
+
+  // Theme
+  themeColor      String   @default("#8B5CF6") @map("theme_color")
+  themeStyle      String   @default("modern") @map("theme_style")
+
+  // Calendar Integration
+  calendarUrl     String?  @map("calendar_url")
+  calendarEmbed   Boolean  @default(false) @map("calendar_embed")
+
+  // Settings
+  isActive        Boolean  @default(true) @map("is_active")
+  isPublic        Boolean  @default(true) @map("is_public")
+  showVcardDownload Boolean @default(true) @map("show_vcard_download")
+  showContactForm Boolean  @default(true) @map("show_contact_form")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  socialLinks     SocialLink[]
+  customLinks     CustomLink[]
+  cardViews       CardView[]
+  linkClicks      LinkClick[]
+  contactRequests ContactRequest[]
+
+  @@index([shortCode])
+  @@index([userId])
+  @@map("business_cards")
+}
+
+model SocialLink {
+  id              String       @id @default(uuid())
+  businessCardId  String       @map("business_card_id")
+  platform        String
+  url             String
+  username        String?
+  sortOrder       Int          @default(0) @map("sort_order")
+  isVisible       Boolean      @default(true) @map("is_visible")
+
+  businessCard    BusinessCard @relation(fields: [businessCardId], references: [id], onDelete: Cascade)
+
+  @@index([businessCardId])
+  @@map("social_links")
+}
+
+model CustomLink {
+  id              String       @id @default(uuid())
+  businessCardId  String       @map("business_card_id")
+  title           String
+  url             String
+  icon            String?
+  sortOrder       Int          @default(0) @map("sort_order")
+  isVisible       Boolean      @default(true) @map("is_visible")
+
+  businessCard    BusinessCard @relation(fields: [businessCardId], references: [id], onDelete: Cascade)
+
+  @@index([businessCardId])
+  @@map("custom_links")
+}
+
+model CardView {
+  id              String       @id @default(uuid())
+  businessCardId  String       @map("business_card_id")
+  timestamp       DateTime     @default(now())
+
+  // Analytics
+  deviceType      String?      @map("device_type")
+  browser         String?
+  browserVersion  String?      @map("browser_version")
+  os              String?
+  osVersion       String?      @map("os_version")
+  country         String?
+  countryCode     String?      @map("country_code")
+  region          String?
+  city            String?
+  latitude        Decimal?     @db.Decimal(10, 8)
+  longitude       Decimal?     @db.Decimal(11, 8)
+  ipAddress       String?      @map("ip_address")
+  referrer        String?
+  userAgent       String?      @map("user_agent")
+
+  businessCard    BusinessCard @relation(fields: [businessCardId], references: [id], onDelete: Cascade)
+
+  @@index([businessCardId])
+  @@index([timestamp])
+  @@map("card_views")
+}
+
+model LinkClick {
+  id              String       @id @default(uuid())
+  businessCardId  String       @map("business_card_id")
+  linkType        String       @map("link_type")
+  linkId          String?      @map("link_id")
+  platform        String?
+  timestamp       DateTime     @default(now())
+
+  // Minimal analytics
+  deviceType      String?      @map("device_type")
+  country         String?
+
+  businessCard    BusinessCard @relation(fields: [businessCardId], references: [id], onDelete: Cascade)
+
+  @@index([businessCardId])
+  @@index([timestamp])
+  @@map("link_clicks")
+}
+
+model ContactRequest {
+  id              String       @id @default(uuid())
+  businessCardId  String       @map("business_card_id")
+
+  // Visitor contact info
+  name            String
+  email           String?
+  phone           String?
+  company         String?
+  message         String?      @db.Text
+
+  // Metadata
+  timestamp       DateTime     @default(now())
+  isRead          Boolean      @default(false) @map("is_read")
+
+  // Analytics
+  country         String?
+  deviceType      String?      @map("device_type")
+
+  businessCard    BusinessCard @relation(fields: [businessCardId], references: [id], onDelete: Cascade)
+
+  @@index([businessCardId])
+  @@index([timestamp])
+  @@map("contact_requests")
 }

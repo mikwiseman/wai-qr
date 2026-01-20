@@ -21,13 +21,38 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /opt/wai-qr
+
+            # Backup uploads before deployment
+            if [ -d ".next/standalone/public/uploads" ]; then
+              cp -r .next/standalone/public/uploads /tmp/waiqr-uploads-backup
+            fi
+
+            # Pull latest code and build
             git pull origin main
             npm ci
             npx prisma generate
+            npx prisma db push --skip-generate
             npm run build
+
+            # Copy static files
             cp -r .next/static .next/standalone/.next/
-            cp -r public/* .next/standalone/public/
+
+            # Copy public files except uploads
+            find public -maxdepth 1 -not -name uploads -not -name public -exec cp -r {} .next/standalone/public/ \;
+
+            # Restore uploads backup
+            if [ -d "/tmp/waiqr-uploads-backup" ]; then
+              rm -rf .next/standalone/public/uploads
+              mv /tmp/waiqr-uploads-backup .next/standalone/public/uploads
+            fi
+
+            # Ensure uploads directory exists
+            mkdir -p .next/standalone/public/uploads
+
+            # Fix permissions
             chown -R www-data:www-data /opt/wai-qr
-            chmod 755 /opt/wai-qr/.next/standalone/public/uploads
+            chmod 755 .next/standalone/public/uploads
+
+            # Restart service
             systemctl restart wai-qr
             echo "Deployment complete!"

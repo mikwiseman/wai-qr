@@ -179,24 +179,31 @@ NEXT_PUBLIC_BASE_URL="http://localhost:3000"
 
 ## Deployment Process
 
-### Build and Deploy
+**Automatic**: Push to `main` branch triggers GitHub Actions deployment.
+
+### Manual Deploy (if needed)
 
 ```bash
-# On local machine
-npm run build
-
-# Copy to server
-rsync -avz --exclude 'node_modules' --exclude '.git' ./ root@164.92.123.157:/opt/wai-qr/
-
 # On server
 cd /opt/wai-qr
-npm install --production
+
+# Backup uploads before deployment
+cp -r .next/standalone/public/uploads /tmp/waiqr-uploads-backup
+
+# Pull and build
+git pull origin main
+npm ci
 npx prisma generate
+npx prisma db push --skip-generate
 npm run build
 
-# Copy static files to standalone
+# Copy static files (preserve uploads!)
 cp -r .next/static .next/standalone/.next/
-cp -r public/* .next/standalone/public/
+find public -maxdepth 1 -not -name uploads -not -name public -exec cp -r {} .next/standalone/public/ \;
+
+# Restore uploads
+rm -rf .next/standalone/public/uploads
+mv /tmp/waiqr-uploads-backup .next/standalone/public/uploads
 
 # Fix permissions
 chown -R www-data:www-data /opt/wai-qr
