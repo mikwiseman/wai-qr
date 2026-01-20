@@ -1,13 +1,30 @@
 # WaiQR
 
-A QR code generator and analytics platform built with Next.js. Create custom QR codes with center logos, track scans with detailed analytics, and manage everything through an intuitive dashboard.
+A QR code generator, analytics platform, and digital business card builder. Create custom QR codes with center logos, track scans with detailed analytics, build beautiful digital business cards, and manage everything through an intuitive dashboard.
+
+**Live Demo**: [waiqr.xyz](https://waiqr.xyz)
 
 ## Features
 
+### QR Codes
 - **Custom QR Codes**: Generate QR codes with custom center images (presets or upload your own)
 - **Analytics Dashboard**: Track scans with device type, browser, OS, and geolocation data
+- **Download PNG**: Export QR codes for print or digital use
+
+### Digital Business Cards
+- **Beautiful Themes**: 7 pre-built themes (Modern, Dark, Gradient, Minimal, Ocean, Sunset, Nature)
+- **Social Links**: Support for 21+ social platforms (LinkedIn, Twitter, Telegram, Instagram, GitHub, etc.)
+- **Custom Links**: Add portfolio, booking, or any custom links with emoji icons
+- **vCard Download**: One-tap contact saving to phone
+- **Two-Way Exchange**: Visitors can share their contact back with you
+- **Calendar Integration**: Connect Calendly, Cal.com, and other booking platforms
+- **Full Analytics**: Track views, clicks, and contact submissions
+- **QR Code Sharing**: Each card has a unique short URL and QR code
+
+### General
 - **Magic Link Auth**: Passwordless authentication via email
 - **Responsive Design**: Works on desktop and mobile devices
+- **Fast & Lightweight**: Built with Next.js 16 App Router
 
 ## Tech Stack
 
@@ -83,16 +100,23 @@ src/
 │   ├── api/               # API routes
 │   │   ├── auth/          # Authentication endpoints
 │   │   ├── qrcodes/       # QR code CRUD operations
+│   │   ├── cards/         # Business cards CRUD operations
 │   │   └── images/        # Image upload/management
 │   ├── dashboard/         # Dashboard pages
+│   │   └── cards/         # Business cards management
+│   ├── c/[code]/          # Public card page
 │   ├── login/             # Login page
 │   └── r/[code]/          # QR code redirect handler
 ├── components/            # React components
+│   └── cards/             # Business card components
 ├── lib/                   # Utility libraries
 │   ├── auth.ts           # JWT session management
 │   ├── db.ts             # Prisma client
 │   ├── email.ts          # Email sending
 │   ├── qrcode.ts         # QR code generation
+│   ├── vcard.ts          # vCard generation
+│   ├── social-platforms.ts # Social platform definitions
+│   ├── card-themes.ts    # Card theme presets
 │   └── types.ts          # TypeScript types
 └── generated/            # Generated Prisma client
 prisma/
@@ -106,11 +130,22 @@ public/
 
 The app uses the following main models:
 
+**Core:**
 - **User**: Email-based user accounts
+- **MagicLink**: Passwordless authentication tokens
+
+**QR Codes:**
 - **QRCode**: QR codes with destination URL, title, and center image configuration
 - **Scan**: Analytics data for each QR code scan
 - **UserImage**: Custom uploaded center images
-- **MagicLink**: Passwordless authentication tokens
+
+**Business Cards:**
+- **BusinessCard**: Digital cards with profile, theme, and settings
+- **SocialLink**: Social media links
+- **CustomLink**: Custom links with title and icon
+- **CardView**: Card view analytics
+- **LinkClick**: Link click tracking
+- **ContactRequest**: Two-way contact exchange
 
 See `prisma/schema.prisma` for the complete schema.
 
@@ -130,16 +165,26 @@ See `prisma/schema.prisma` for the complete schema.
 - `PUT /api/qrcodes/[id]` - Update QR code
 - `DELETE /api/qrcodes/[id]` - Delete QR code
 - `GET /api/qrcodes/[id]/stats` - Get scan analytics
+- `GET /r/[code]` - Redirect to destination URL (tracks analytics)
+
+### Business Cards
+
+- `GET /api/cards` - List user's business cards
+- `POST /api/cards` - Create new card
+- `GET /api/cards/[id]` - Get card details with links
+- `PATCH /api/cards/[id]` - Update card
+- `DELETE /api/cards/[id]` - Delete card
+- `GET /api/cards/[id]/stats` - Get card analytics
+- `GET /api/cards/[id]/vcard` - Download vCard (public)
+- `POST /api/cards/[id]/contact` - Submit contact request (public)
+- `GET /api/cards/[id]/contact` - List contact requests (owner only)
+- `GET /c/[code]` - Public card page
 
 ### Images
 
 - `GET /api/images` - List user's uploaded images
 - `POST /api/images/upload` - Upload center image
 - `GET /api/images/presets` - List preset images
-
-### Redirects
-
-- `GET /r/[code]` - Redirect to destination URL (tracks analytics)
 
 ## Development
 

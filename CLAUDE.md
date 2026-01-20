@@ -78,11 +78,20 @@ Password: OGyPblKJatdDaV382uORvLLW
 
 Located at `prisma/schema.prisma`. Key models:
 
+**QR Codes:**
 - **User**: Email-based accounts
 - **MagicLink**: Passwordless auth tokens (15min expiry)
 - **QRCode**: QR codes with destination URL, title, center image config
 - **Scan**: Analytics data (device, browser, OS, geolocation)
 - **UserImage**: Custom uploaded center images
+
+**Business Cards:**
+- **BusinessCard**: Digital business cards with profile, theme, and settings
+- **SocialLink**: Social media links (LinkedIn, Twitter, Telegram, etc.)
+- **CustomLink**: Custom links with title and icon
+- **CardView**: Card view analytics (device, browser, location)
+- **LinkClick**: Click tracking for links
+- **ContactRequest**: Two-way contact exchange data
 
 ### Prisma Commands
 
@@ -161,21 +170,40 @@ NEXT_PUBLIC_BASE_URL="http://localhost:3000"
 | `src/lib/qrcode.ts` | QR code generation with center images |
 | `src/lib/types.ts` | Shared TypeScript types |
 | `src/middleware.ts` | Route protection |
+| `src/lib/vcard.ts` | vCard 3.0 generation |
+| `src/lib/social-platforms.ts` | Social platform definitions (21 platforms) |
+| `src/lib/card-themes.ts` | Card theme presets (7 themes) |
 
 ## API Routes
 
+### Authentication & Images
 | Route | Method | Purpose |
 |-------|--------|---------|
 | `/api/auth/login` | POST | Send magic link email |
 | `/api/auth/logout` | POST | Clear session |
 | `/auth/callback` | GET | Verify magic link, create session |
-| `/api/qrcodes` | GET/POST | List/create QR codes |
-| `/api/qrcodes/[id]` | GET/PUT/DELETE | Single QR code operations |
-| `/api/qrcodes/[id]/stats` | GET | QR code analytics |
 | `/api/images` | GET | List user's uploaded images |
 | `/api/images/upload` | POST | Upload center image |
 | `/api/images/presets` | GET | List preset center images |
+
+### QR Codes
+| Route | Method | Purpose |
+|-------|--------|---------|
+| `/api/qrcodes` | GET/POST | List/create QR codes |
+| `/api/qrcodes/[id]` | GET/PUT/DELETE | Single QR code operations |
+| `/api/qrcodes/[id]/stats` | GET | QR code analytics |
 | `/r/[code]` | GET | QR code redirect + analytics tracking |
+
+### Business Cards
+| Route | Method | Purpose |
+|-------|--------|---------|
+| `/api/cards` | GET/POST | List/create business cards |
+| `/api/cards/[id]` | GET/PATCH/DELETE | Single card operations |
+| `/api/cards/[id]/stats` | GET | Card analytics |
+| `/api/cards/[id]/vcard` | GET | Download vCard (public) |
+| `/api/cards/[id]/contact` | GET/POST/PATCH | Contact requests |
+| `/c/[code]` | GET | Public card page |
+| `/c/[code]/click` | POST | Track link clicks |
 
 ## Deployment Process
 
