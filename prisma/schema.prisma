@@ -144,7 +144,6 @@ model BusinessCard {
   isActive        Boolean  @default(true) @map("is_active")
   isPublic        Boolean  @default(true) @map("is_public")
   showVcardDownload Boolean @default(true) @map("show_vcard_download")
-  showContactForm Boolean  @default(true) @map("show_contact_form")
 
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
@@ -155,7 +154,6 @@ model BusinessCard {
   customLinks     CustomLink[]
   cardViews       CardView[]
   linkClicks      LinkClick[]
-  contactRequests ContactRequest[]
 
   @@index([shortCode])
   @@index([userId])
@@ -239,28 +237,3 @@ model LinkClick {
   @@map("link_clicks")
 }
 
-model ContactRequest {
-  id              String       @id @default(uuid())
-  businessCardId  String       @map("business_card_id")
-
-  // Visitor contact info
-  name            String
-  email           String?
-  phone           String?
-  company         String?
-  message         String?      @db.Text
-
-  // Metadata
-  timestamp       DateTime     @default(now())
-  isRead          Boolean      @default(false) @map("is_read")
-
-  // Analytics
-  country         String?
-  deviceType      String?      @map("device_type")
-
-  businessCard    BusinessCard @relation(fields: [businessCardId], references: [id], onDelete: Cascade)
-
-  @@index([businessCardId])
-  @@index([timestamp])
-  @@map("contact_requests")
-}

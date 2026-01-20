@@ -2,7 +2,7 @@ import { getSession } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import LogoutButton from '@/components/LogoutButton'
-import CardForm from '@/components/cards/CardForm'
+import NewCardChoice from '@/components/cards/NewCardChoice'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,8 +42,7 @@ export default async function NewCardPage() {
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">Create Business Card</h1>
-            <CardForm mode="create" />
+            <NewCardChoice />
           </div>
         </div>
       </main>

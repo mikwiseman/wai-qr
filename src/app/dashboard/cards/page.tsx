@@ -16,7 +16,6 @@ async function getCards(userId: string) {
         select: {
           cardViews: true,
           linkClicks: true,
-          contactRequests: true,
         },
       },
     },
@@ -33,7 +32,6 @@ async function getCards(userId: string) {
     created_at: card.createdAt.toISOString(),
     view_count: card._count.cardViews,
     click_count: card._count.linkClicks,
-    contact_count: card._count.contactRequests,
   }))
 }
 

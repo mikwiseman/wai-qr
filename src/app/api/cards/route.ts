@@ -42,10 +42,9 @@ function transformCard(card: {
   isActive: boolean
   isPublic: boolean
   showVcardDownload: boolean
-  showContactForm: boolean
   createdAt: Date
   updatedAt: Date
-  _count?: { cardViews: number; linkClicks: number; contactRequests: number }
+  _count?: { cardViews: number; linkClicks: number }
 }) {
   return {
     id: card.id,
@@ -71,12 +70,10 @@ function transformCard(card: {
     is_active: card.isActive,
     is_public: card.isPublic,
     show_vcard_download: card.showVcardDownload,
-    show_contact_form: card.showContactForm,
     created_at: card.createdAt.toISOString(),
     updated_at: card.updatedAt.toISOString(),
     view_count: card._count?.cardViews ?? 0,
     click_count: card._count?.linkClicks ?? 0,
-    contact_count: card._count?.contactRequests ?? 0,
   }
 }
 
@@ -96,7 +93,6 @@ export async function GET() {
           select: {
             cardViews: true,
             linkClicks: true,
-            contactRequests: true,
           },
         },
       },
@@ -123,7 +119,6 @@ export async function POST(request: NextRequest) {
       headline,
       bio,
       avatarUrl,
-      coverImageUrl,
       email,
       phone,
       website,
@@ -159,7 +154,6 @@ export async function POST(request: NextRequest) {
           headline: headline?.trim() || null,
           bio: bio?.trim() || null,
           avatarUrl: avatarUrl || null,
-          coverImageUrl: coverImageUrl || null,
           email: email?.trim() || null,
           phone: phone?.trim() || null,
           website: website?.trim() || null,
@@ -212,7 +206,6 @@ export async function POST(request: NextRequest) {
           select: {
             cardViews: true,
             linkClicks: true,
-            contactRequests: true,
           },
         },
       },

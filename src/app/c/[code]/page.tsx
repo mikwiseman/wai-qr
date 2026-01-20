@@ -145,7 +145,6 @@ export default async function CardPublicPage({ params }: PageProps) {
     calendarUrl: card.calendarUrl,
     calendarEmbed: card.calendarEmbed,
     showVcardDownload: card.showVcardDownload,
-    showContactForm: card.showContactForm,
     socialLinks: card.socialLinks.map(link => ({
       id: link.id,
       platform: link.platform,

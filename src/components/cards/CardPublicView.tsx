@@ -1,10 +1,8 @@
 'use client'
 
-import { useState } from 'react'
 import Image from 'next/image'
 import { getThemeById, getDefaultTheme } from '@/lib/card-themes'
 import { getPlatformById, socialPlatforms } from '@/lib/social-platforms'
-import ContactFormModal from './ContactFormModal'
 
 interface SocialLinkData {
   id: string
@@ -39,7 +37,6 @@ interface CardData {
   calendarUrl: string | null
   calendarEmbed: boolean
   showVcardDownload: boolean
-  showContactForm: boolean
   socialLinks: SocialLinkData[]
   customLinks: CustomLinkData[]
 }
@@ -50,9 +47,6 @@ interface CardPublicViewProps {
 }
 
 export default function CardPublicView({ card, qrCodeDataUrl }: CardPublicViewProps) {
-  const [showContactForm, setShowContactForm] = useState(false)
-  const [contactSubmitted, setContactSubmitted] = useState(false)
-
   const theme = getThemeById(card.themeStyle) || getDefaultTheme()
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://waiqr.xyz'
 
@@ -90,26 +84,6 @@ export default function CardPublicView({ card, qrCodeDataUrl }: CardPublicViewPr
     }
   }
 
-  const handleContactSubmit = async (data: { name: string; email?: string; phone?: string; company?: string; message?: string }) => {
-    try {
-      const response = await fetch(`/api/cards/${card.id}/contact`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
-
-      if (response.ok) {
-        setContactSubmitted(true)
-        setShowContactForm(false)
-        return true
-      }
-      return false
-    } catch (error) {
-      console.error('Failed to submit contact:', error)
-      return false
-    }
-  }
-
   // Get social icon by platform
   const getSocialIcon = (platform: string) => {
     const p = getPlatformById(platform) || socialPlatforms.find(sp => sp.id === platform)
@@ -144,7 +118,7 @@ export default function CardPublicView({ card, qrCodeDataUrl }: CardPublicViewPr
                   className="object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-4xl text-gray-400">
+                <div className={`w-full h-full flex items-center justify-center text-4xl ${theme.textSecondaryClass}`}>
                   {card.displayName.charAt(0).toUpperCase()}
                 </div>
               )}
@@ -241,26 +215,10 @@ export default function CardPublicView({ card, qrCodeDataUrl }: CardPublicViewPr
                 ⬇️ Save Contact
               </button>
             )}
-
-            {/* Contact Form */}
-            {card.showContactForm && !contactSubmitted && (
-              <button
-                onClick={() => setShowContactForm(true)}
-                className={`w-full py-3 px-4 rounded-xl border ${theme.cardBorderClass} ${theme.textPrimaryClass} font-medium ${theme.linkHoverClass} transition-colors`}
-              >
-                ✉️ Send Your Contact
-              </button>
-            )}
-
-            {contactSubmitted && (
-              <div className={`w-full py-3 px-4 rounded-xl bg-green-100 text-green-800 text-center`}>
-                ✓ Contact sent successfully!
-              </div>
-            )}
           </div>
 
           {/* QR Code and URL */}
-          <div className="px-6 pb-6 text-center border-t border-gray-200/50 pt-4">
+          <div className={`px-6 pb-6 text-center border-t ${theme.cardBorderClass} pt-4`}>
             {qrCodeDataUrl && (
               <div className="mb-4 flex justify-center">
                 <div className="bg-white p-3 rounded-xl shadow-sm">
@@ -290,14 +248,6 @@ export default function CardPublicView({ card, qrCodeDataUrl }: CardPublicViewPr
           </a>
         </div>
       </div>
-
-      {/* Contact Form Modal */}
-      <ContactFormModal
-        isOpen={showContactForm}
-        onClose={() => setShowContactForm(false)}
-        onSubmit={handleContactSubmit}
-        cardOwnerName={card.displayName}
-      />
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { cardThemes, accentColors } from '@/lib/card-themes'
 import { socialPlatforms, getPlatformById } from '@/lib/social-platforms'
 import ImagePicker from '@/components/ImagePicker'
+import AvatarUploader from '@/components/cards/AvatarUploader'
 import { CenterImageType } from '@/lib/types'
 
 interface SocialLinkInput {
@@ -44,7 +45,6 @@ interface CardData {
   is_active: boolean
   is_public: boolean
   show_vcard_download: boolean
-  show_contact_form: boolean
   social_links: Array<{
     id: string
     platform: string
@@ -61,30 +61,50 @@ interface CardData {
   }>
 }
 
+interface InitialData {
+  display_name: string
+  headline: string | null
+  bio: string | null
+  avatar_url: string | null
+  company: string | null
+  job_title: string | null
+  location: string | null
+  social_links?: Array<{
+    id: string
+    platform: string
+    url: string
+    username: string | null
+    is_visible: boolean
+  }>
+}
+
 interface CardFormProps {
   mode: 'create' | 'edit'
   card?: CardData
+  initialData?: InitialData
 }
 
-export default function CardForm({ mode, card }: CardFormProps) {
+export default function CardForm({ mode, card, initialData }: CardFormProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // Use initialData for create mode, card for edit mode
+  const source = mode === 'edit' ? card : initialData
+
   // Profile fields
-  const [displayName, setDisplayName] = useState(card?.display_name || '')
-  const [headline, setHeadline] = useState(card?.headline || '')
-  const [bio, setBio] = useState(card?.bio || '')
-  const [avatarUrl, setAvatarUrl] = useState(card?.avatar_url || '')
-  const [coverImageUrl, setCoverImageUrl] = useState(card?.cover_image_url || '')
+  const [displayName, setDisplayName] = useState(source?.display_name || '')
+  const [headline, setHeadline] = useState(source?.headline || '')
+  const [bio, setBio] = useState(source?.bio || '')
+  const [avatarUrl, setAvatarUrl] = useState(source?.avatar_url || '')
 
   // Contact fields
   const [email, setEmail] = useState(card?.email || '')
   const [phone, setPhone] = useState(card?.phone || '')
   const [website, setWebsite] = useState(card?.website || '')
-  const [company, setCompany] = useState(card?.company || '')
-  const [jobTitle, setJobTitle] = useState(card?.job_title || '')
-  const [location, setLocation] = useState(card?.location || '')
+  const [company, setCompany] = useState(source?.company || '')
+  const [jobTitle, setJobTitle] = useState(source?.job_title || '')
+  const [location, setLocation] = useState(source?.location || '')
 
   // Theme
   const [themeStyle, setThemeStyle] = useState(card?.theme_style || 'modern')
@@ -104,17 +124,17 @@ export default function CardForm({ mode, card }: CardFormProps) {
   const [isActive, setIsActive] = useState(card?.is_active !== false)
   const [isPublic, setIsPublic] = useState(card?.is_public !== false)
   const [showVcardDownload, setShowVcardDownload] = useState(card?.show_vcard_download !== false)
-  const [showContactForm, setShowContactForm] = useState(card?.show_contact_form !== false)
 
-  // Social links
-  const [socialLinks, setSocialLinks] = useState<SocialLinkInput[]>(
-    card?.social_links?.map(l => ({
+  // Social links - use card data for edit, initialData for create
+  const [socialLinks, setSocialLinks] = useState<SocialLinkInput[]>(() => {
+    const links = mode === 'edit' ? card?.social_links : initialData?.social_links
+    return links?.map(l => ({
       platform: l.platform,
       url: l.url,
       username: l.username || undefined,
       isVisible: l.is_visible,
     })) || []
-  )
+  })
 
   // Custom links
   const [customLinks, setCustomLinks] = useState<CustomLinkInput[]>(
@@ -171,7 +191,6 @@ export default function CardForm({ mode, card }: CardFormProps) {
         headline: headline.trim() || null,
         bio: bio.trim() || null,
         avatarUrl: avatarUrl.trim() || null,
-        coverImageUrl: coverImageUrl.trim() || null,
         email: email.trim() || null,
         phone: phone.trim() || null,
         website: website.trim() || null,
@@ -187,7 +206,6 @@ export default function CardForm({ mode, card }: CardFormProps) {
         isActive,
         isPublic,
         showVcardDownload,
-        showContactForm,
         socialLinks: socialLinks.filter(l => l.url.trim()),
         customLinks: customLinks.filter(l => l.title.trim() && l.url.trim()),
       }
@@ -299,30 +317,8 @@ export default function CardForm({ mode, card }: CardFormProps) {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Avatar URL
-            </label>
-            <input
-              type="url"
-              value={avatarUrl}
-              onChange={(e) => setAvatarUrl(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-              placeholder="https://example.com/avatar.jpg"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Cover Image URL
-            </label>
-            <input
-              type="url"
-              value={coverImageUrl}
-              onChange={(e) => setCoverImageUrl(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-              placeholder="https://example.com/cover.jpg"
-            />
+          <div className="md:col-span-2">
+            <AvatarUploader value={avatarUrl} onChange={setAvatarUrl} />
           </div>
         </div>
       </section>
@@ -590,15 +586,6 @@ export default function CardForm({ mode, card }: CardFormProps) {
               className="w-4 h-4 text-violet-600 border-gray-300 rounded focus:ring-violet-500"
             />
             <span className="text-sm text-gray-700">Show &quot;Save Contact&quot; button</span>
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={showContactForm}
-              onChange={(e) => setShowContactForm(e.target.checked)}
-              className="w-4 h-4 text-violet-600 border-gray-300 rounded focus:ring-violet-500"
-            />
-            <span className="text-sm text-gray-700">Show &quot;Send Your Contact&quot; form</span>
           </label>
         </div>
       </section>

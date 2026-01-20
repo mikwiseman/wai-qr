@@ -33,10 +33,9 @@ export async function GET(
     startDate.setDate(startDate.getDate() - days)
 
     // Get total counts
-    const [totalViews, totalClicks, totalContacts] = await Promise.all([
+    const [totalViews, totalClicks] = await Promise.all([
       prisma.cardView.count({ where: { businessCardId: id } }),
       prisma.linkClick.count({ where: { businessCardId: id } }),
-      prisma.contactRequest.count({ where: { businessCardId: id } }),
     ])
 
     // Get all views for analysis within date range
@@ -170,7 +169,6 @@ export async function GET(
     return NextResponse.json({
       totalViews,
       totalClicks,
-      totalContacts,
       viewsOverTime,
       deviceBreakdown,
       browserBreakdown,

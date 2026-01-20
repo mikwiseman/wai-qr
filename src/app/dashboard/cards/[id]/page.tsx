@@ -36,7 +36,6 @@ async function getCard(id: string, userId: string) {
         select: {
           cardViews: true,
           linkClicks: true,
-          contactRequests: true,
         },
       },
     },
@@ -67,7 +66,6 @@ async function getCard(id: string, userId: string) {
     is_active: card.isActive,
     is_public: card.isPublic,
     show_vcard_download: card.showVcardDownload,
-    show_contact_form: card.showContactForm,
     created_at: card.createdAt.toISOString(),
     updated_at: card.updatedAt.toISOString(),
     social_links: card.socialLinks.map(link => ({
@@ -86,7 +84,6 @@ async function getCard(id: string, userId: string) {
     })),
     view_count: card._count.cardViews,
     click_count: card._count.linkClicks,
-    contact_count: card._count.contactRequests,
   }
 }
 
@@ -134,12 +131,6 @@ export default async function EditCardPage({ params }: PageProps) {
               ← Back to Cards
             </Link>
             <div className="flex gap-3">
-              <Link
-                href={`/dashboard/cards/${id}/leads`}
-                className="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded-lg transition-colors"
-              >
-                View Contacts ({card.contact_count})
-              </Link>
               <Link
                 href={cardUrl}
                 target="_blank"

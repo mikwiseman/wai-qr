@@ -15,7 +15,6 @@ interface CardSummary {
   created_at: string
   view_count: number
   click_count: number
-  contact_count: number
 }
 
 interface CardsListProps {
@@ -124,7 +123,7 @@ export default function CardsList({ cards: initialCards }: CardsListProps) {
           </div>
 
           {/* Stats */}
-          <div className="px-6 py-3 bg-gray-50 grid grid-cols-3 gap-4 text-center">
+          <div className="px-6 py-3 bg-gray-50 grid grid-cols-2 gap-4 text-center">
             <div>
               <div className="text-lg font-semibold text-gray-900">{card.view_count}</div>
               <div className="text-xs text-gray-600">Views</div>
@@ -132,10 +131,6 @@ export default function CardsList({ cards: initialCards }: CardsListProps) {
             <div>
               <div className="text-lg font-semibold text-gray-900">{card.click_count}</div>
               <div className="text-xs text-gray-600">Clicks</div>
-            </div>
-            <div>
-              <div className="text-lg font-semibold text-gray-900">{card.contact_count}</div>
-              <div className="text-xs text-gray-600">Contacts</div>
             </div>
           </div>
 

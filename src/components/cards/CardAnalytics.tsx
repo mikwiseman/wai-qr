@@ -9,7 +9,6 @@ interface CardAnalyticsProps {
 interface Stats {
   totalViews: number
   totalClicks: number
-  totalContacts: number
   viewsOverTime: Array<{ date: string; count: number }>
   deviceBreakdown: Array<{ name: string; value: number }>
   geoDistribution: Array<{ country: string; countryCode: string | null; value: number }>
@@ -78,7 +77,7 @@ export default function CardAnalytics({ cardId }: CardAnalyticsProps) {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div className="text-center p-4 bg-violet-50 rounded-lg">
           <div className="text-2xl font-bold text-violet-600">{stats.totalViews}</div>
           <div className="text-xs text-gray-600">Views</div>
@@ -86,10 +85,6 @@ export default function CardAnalytics({ cardId }: CardAnalyticsProps) {
         <div className="text-center p-4 bg-blue-50 rounded-lg">
           <div className="text-2xl font-bold text-blue-600">{stats.totalClicks}</div>
           <div className="text-xs text-gray-600">Clicks</div>
-        </div>
-        <div className="text-center p-4 bg-green-50 rounded-lg">
-          <div className="text-2xl font-bold text-green-600">{stats.totalContacts}</div>
-          <div className="text-xs text-gray-600">Contacts</div>
         </div>
       </div>
 

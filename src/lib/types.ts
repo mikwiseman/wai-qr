@@ -79,7 +79,6 @@ export interface BusinessCard {
   is_active: boolean
   is_public: boolean
   show_vcard_download: boolean
-  show_contact_form: boolean
   created_at: string
   updated_at: string
 }
@@ -87,7 +86,6 @@ export interface BusinessCard {
 export interface BusinessCardWithStats extends BusinessCard {
   view_count: number
   click_count: number
-  contact_count: number
 }
 
 export interface BusinessCardWithLinks extends BusinessCard {
@@ -146,16 +144,3 @@ export interface LinkClick {
   country: string | null
 }
 
-export interface ContactRequest {
-  id: string
-  business_card_id: string
-  name: string
-  email: string | null
-  phone: string | null
-  company: string | null
-  message: string | null
-  timestamp: string
-  is_read: boolean
-  country: string | null
-  device_type: string | null
-}

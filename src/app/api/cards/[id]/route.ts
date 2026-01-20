@@ -90,7 +90,6 @@ function transformCard(card: any) {
     custom_links: card.customLinks?.map(transformCustomLink) || [],
     view_count: card._count?.cardViews ?? 0,
     click_count: card._count?.linkClicks ?? 0,
-    contact_count: card._count?.contactRequests ?? 0,
   }
 }
 
@@ -120,7 +119,6 @@ export async function GET(
           select: {
             cardViews: true,
             linkClicks: true,
-            contactRequests: true,
           },
         },
       },
@@ -169,7 +167,7 @@ export async function PATCH(
 
     // Handle string fields
     const stringFields = [
-      'displayName', 'headline', 'bio', 'avatarUrl', 'coverImageUrl',
+      'displayName', 'headline', 'bio', 'avatarUrl',
       'email', 'phone', 'website', 'company', 'jobTitle', 'location',
       'themeColor', 'themeStyle', 'calendarUrl',
     ]
@@ -181,7 +179,7 @@ export async function PATCH(
     }
 
     // Handle boolean fields
-    const booleanFields = ['isActive', 'isPublic', 'showVcardDownload', 'showContactForm', 'calendarEmbed']
+    const booleanFields = ['isActive', 'isPublic', 'showVcardDownload', 'calendarEmbed']
     for (const field of booleanFields) {
       if (field in body) {
         updateData[field] = Boolean(body[field])
@@ -265,7 +263,6 @@ export async function PATCH(
           select: {
             cardViews: true,
             linkClicks: true,
-            contactRequests: true,
           },
         },
       },
