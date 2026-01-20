@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createPublicSupabase } from '@/lib/supabase'
+import { prisma } from '@/lib/db'
 import { parseUserAgent } from '@/lib/user-agent'
 import { getGeoLocation, getClientIP } from '@/lib/geolocation'
-
-const supabase = createPublicSupabase()
+import { Decimal } from '@/generated/prisma/runtime/library'
 
 export async function GET(
   request: NextRequest,
@@ -13,17 +12,15 @@ export async function GET(
     const { code } = await params
 
     // Find the QR code
-    const { data: qrCode, error } = await supabase
-      .from('qr_codes')
-      .select('*')
-      .eq('short_code', code)
-      .single()
+    const qrCode = await prisma.qRCode.findUnique({
+      where: { shortCode: code },
+    })
 
-    if (error || !qrCode) {
+    if (!qrCode) {
       return NextResponse.redirect(new URL('/not-found', request.url))
     }
 
-    if (!qrCode.is_active) {
+    if (!qrCode.isActive) {
       return NextResponse.redirect(new URL('/inactive', request.url))
     }
 
@@ -38,28 +35,30 @@ export async function GET(
     // Get geolocation and save scan (async, don't block redirect)
     getGeoLocation(ip)
       .then(async (geo) => {
-        await supabase.from('scans').insert({
-          qr_code_id: qrCode.id,
-          device_type: deviceType,
-          browser,
-          browser_version: browserVersion,
-          os,
-          os_version: osVersion,
-          ip_address: ip,
-          country: geo.country,
-          country_code: geo.countryCode,
-          region: geo.region,
-          city: geo.city,
-          latitude: geo.latitude,
-          longitude: geo.longitude,
-          referrer,
-          user_agent: userAgentString,
+        await prisma.scan.create({
+          data: {
+            qrCodeId: qrCode.id,
+            deviceType,
+            browser,
+            browserVersion,
+            os,
+            osVersion,
+            ipAddress: ip,
+            country: geo.country,
+            countryCode: geo.countryCode,
+            region: geo.region,
+            city: geo.city,
+            latitude: geo.latitude !== null ? new Decimal(geo.latitude) : null,
+            longitude: geo.longitude !== null ? new Decimal(geo.longitude) : null,
+            referrer,
+            userAgent: userAgentString,
+          },
         })
       })
       .catch(console.error)
 
     // Redirect immediately (don't wait for analytics)
-    return NextResponse.redirect(qrCode.destination_url)
+    return NextResponse.redirect(qrCode.destinationUrl)
   } catch (error) {
     console.error('Redirect error:', error)
     return NextResponse.redirect(new URL('/error', request.url))

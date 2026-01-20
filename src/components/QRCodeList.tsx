@@ -2,11 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { QRCode } from '@/lib/supabase'
-
-interface QRCodeWithCount extends QRCode {
-  scan_count: number
-}
+import { QRCodeWithCount } from '@/lib/types'
 
 export default function QRCodeList({ qrCodes }: { qrCodes: QRCodeWithCount[] }) {
   const router = useRouter()

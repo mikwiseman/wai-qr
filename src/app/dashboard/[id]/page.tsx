@@ -1,43 +1,61 @@
-import { createServerSupabase } from '@/lib/supabase'
-import { notFound } from 'next/navigation'
+import { prisma } from '@/lib/db'
+import { getSession } from '@/lib/auth'
+import { redirect, notFound } from 'next/navigation'
 import { generateQRCodeDataURL, CenterImageType } from '@/lib/qrcode'
+import { CenterImageType as PrismaCenterImageType } from '@/generated/prisma'
 import QRCodeDetail from '@/components/QRCodeDetail'
 import LogoutButton from '@/components/LogoutButton'
 
 export const dynamic = 'force-dynamic'
 
-async function getQRCode(id: string) {
-  const supabase = await createServerSupabase()
+// Map Prisma enum to API values
+function fromPrismaCenterImageType(type: PrismaCenterImageType): CenterImageType {
+  if (type === 'default_img') return 'default'
+  return type as CenterImageType
+}
 
-  const { data: qrCode, error } = await supabase
-    .from('qr_codes')
-    .select('*')
-    .eq('id', id)
-    .single()
+async function getQRCode(id: string, userId: string) {
+  const qrCode = await prisma.qRCode.findFirst({
+    where: {
+      id,
+      userId,
+    },
+    include: {
+      _count: {
+        select: { scans: true },
+      },
+    },
+  })
 
-  if (error || !qrCode) {
+  if (!qrCode) {
     return null
   }
 
-  // Get scan count
-  const { count } = await supabase
-    .from('scans')
-    .select('*', { count: 'exact', head: true })
-    .eq('qr_code_id', id)
-
   // Generate the redirect URL
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://waiqr.xyz'
-  const redirectUrl = `${baseUrl}/r/${qrCode.short_code}`
+  const redirectUrl = `${baseUrl}/r/${qrCode.shortCode}`
+
+  // Map center image type
+  const centerImageType = fromPrismaCenterImageType(qrCode.centerImageType)
 
   // Generate QR code image as data URL with the stored center image
   const qrImageDataUrl = await generateQRCodeDataURL(redirectUrl, {
-    type: (qrCode.center_image_type as CenterImageType) || 'default',
-    reference: qrCode.center_image_ref || undefined,
+    type: centerImageType,
+    reference: qrCode.centerImageRef || undefined,
   })
 
   return {
-    ...qrCode,
-    scan_count: count || 0,
+    id: qrCode.id,
+    short_code: qrCode.shortCode,
+    destination_url: qrCode.destinationUrl,
+    title: qrCode.title,
+    created_at: qrCode.createdAt.toISOString(),
+    updated_at: qrCode.updatedAt.toISOString(),
+    is_active: qrCode.isActive,
+    user_id: qrCode.userId,
+    center_image_type: centerImageType,
+    center_image_ref: qrCode.centerImageRef,
+    scan_count: qrCode._count.scans,
     redirectUrl,
     qrImageDataUrl,
   }
@@ -48,8 +66,14 @@ export default async function QRCodeDetailPage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  const session = await getSession()
+
+  if (!session) {
+    redirect('/login')
+  }
+
   const { id } = await params
-  const qrCode = await getQRCode(id)
+  const qrCode = await getQRCode(id, session.userId)
 
   if (!qrCode) {
     notFound()

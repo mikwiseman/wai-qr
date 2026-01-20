@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabase } from '@/lib/supabase'
+import { getSession } from '@/lib/auth'
+import { prisma } from '@/lib/db'
 
 export async function GET(
   request: NextRequest,
@@ -7,23 +8,22 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const supabase = await createServerSupabase()
 
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const session = await getSession()
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Verify ownership
-    const { data: qrCode, error: qrError } = await supabase
-      .from('qr_codes')
-      .select('id')
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .single()
+    const qrCode = await prisma.qRCode.findFirst({
+      where: {
+        id,
+        userId: session.userId,
+      },
+    })
 
-    if (qrError || !qrCode) {
+    if (!qrCode) {
       return NextResponse.json({ error: 'QR code not found' }, { status: 404 })
     }
 
@@ -34,28 +34,23 @@ export async function GET(
     startDate.setDate(startDate.getDate() - days)
 
     // Get total scan count
-    const { count: totalScans } = await supabase
-      .from('scans')
-      .select('*', { count: 'exact', head: true })
-      .eq('qr_code_id', id)
+    const totalScans = await prisma.scan.count({
+      where: { qrCodeId: id },
+    })
 
-    // Get all scans for analysis
-    const { data: allScans, error: scansError } = await supabase
-      .from('scans')
-      .select('*')
-      .eq('qr_code_id', id)
-      .gte('timestamp', startDate.toISOString())
-      .order('timestamp', { ascending: true })
-
-    if (scansError) {
-      console.error('Error fetching scans:', scansError)
-      return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 })
-    }
+    // Get all scans for analysis within date range
+    const allScans = await prisma.scan.findMany({
+      where: {
+        qrCodeId: id,
+        timestamp: { gte: startDate },
+      },
+      orderBy: { timestamp: 'asc' },
+    })
 
     // Process scans over time (daily buckets)
     const dailyScansMap = new Map<string, number>()
-    allScans?.forEach((scan) => {
-      const date = new Date(scan.timestamp).toISOString().split('T')[0]
+    allScans.forEach((scan) => {
+      const date = scan.timestamp.toISOString().split('T')[0]
       dailyScansMap.set(date, (dailyScansMap.get(date) || 0) + 1)
     })
 
@@ -65,8 +60,8 @@ export async function GET(
 
     // Device breakdown
     const deviceMap = new Map<string, number>()
-    allScans?.forEach((scan) => {
-      const device = scan.device_type || 'Unknown'
+    allScans.forEach((scan) => {
+      const device = scan.deviceType || 'Unknown'
       deviceMap.set(device, (deviceMap.get(device) || 0) + 1)
     })
     const deviceBreakdown = Array.from(deviceMap.entries()).map(([name, value]) => ({
@@ -76,7 +71,7 @@ export async function GET(
 
     // Browser breakdown
     const browserMap = new Map<string, number>()
-    allScans?.forEach((scan) => {
+    allScans.forEach((scan) => {
       const browser = scan.browser || 'Unknown'
       browserMap.set(browser, (browserMap.get(browser) || 0) + 1)
     })
@@ -87,7 +82,7 @@ export async function GET(
 
     // OS breakdown
     const osMap = new Map<string, number>()
-    allScans?.forEach((scan) => {
+    allScans.forEach((scan) => {
       const os = scan.os || 'Unknown'
       osMap.set(os, (osMap.get(os) || 0) + 1)
     })
@@ -98,9 +93,9 @@ export async function GET(
 
     // Geographic distribution
     const geoMap = new Map<string, { count: number; countryCode: string | null }>()
-    allScans?.forEach((scan) => {
+    allScans.forEach((scan) => {
       if (scan.country) {
-        const existing = geoMap.get(scan.country) || { count: 0, countryCode: scan.country_code }
+        const existing = geoMap.get(scan.country) || { count: 0, countryCode: scan.countryCode }
         existing.count++
         geoMap.set(scan.country, existing)
       }
@@ -115,21 +110,41 @@ export async function GET(
       .slice(0, 20)
 
     // Get recent scans
-    const { data: recentScans } = await supabase
-      .from('scans')
-      .select('*')
-      .eq('qr_code_id', id)
-      .order('timestamp', { ascending: false })
-      .limit(50)
+    const recentScans = await prisma.scan.findMany({
+      where: { qrCodeId: id },
+      orderBy: { timestamp: 'desc' },
+      take: 50,
+    })
+
+    // Transform recent scans to match expected API format
+    const formattedRecentScans = recentScans.map(scan => ({
+      id: scan.id,
+      qr_code_id: scan.qrCodeId,
+      timestamp: scan.timestamp.toISOString(),
+      device_type: scan.deviceType,
+      browser: scan.browser,
+      browser_version: scan.browserVersion,
+      os: scan.os,
+      os_version: scan.osVersion,
+      ip_address: scan.ipAddress,
+      country: scan.country,
+      country_code: scan.countryCode,
+      region: scan.region,
+      city: scan.city,
+      latitude: scan.latitude ? Number(scan.latitude) : null,
+      longitude: scan.longitude ? Number(scan.longitude) : null,
+      referrer: scan.referrer,
+      user_agent: scan.userAgent,
+    }))
 
     return NextResponse.json({
-      totalScans: totalScans || 0,
+      totalScans,
       scansOverTime,
       deviceBreakdown,
       browserBreakdown,
       osBreakdown,
       geoDistribution,
-      recentScans: recentScans || [],
+      recentScans: formattedRecentScans,
     })
   } catch (error) {
     console.error('Stats error:', error)

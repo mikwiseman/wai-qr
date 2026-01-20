@@ -1,45 +1,59 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { nanoid } from 'nanoid'
+import { prisma } from '@/lib/db'
+import { sendMagicLinkEmail } from '@/lib/email'
 
-const EMAIL_REDIRECT_TO = 'https://waiqr.xyz/auth/callback'
+const MAGIC_LINK_EXPIRY_MINUTES = 15
 
 export async function POST(request: NextRequest) {
-  const { email } = await request.json()
+  try {
+    const { email } = await request.json()
 
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return NextResponse.json({ error: 'Valid email required' }, { status: 400 })
-  }
-
-  // Create response for cookie handling
-  const response = NextResponse.json({ success: true })
-
-  // Create Supabase client
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => request.cookies.getAll(),
-        setAll: (cookiesToSet) => {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, options)
-          })
-        },
-      },
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: 'Valid email required' }, { status: 400 })
     }
-  )
 
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: EMAIL_REDIRECT_TO,
-    },
-  })
+    const normalizedEmail = email.toLowerCase().trim()
 
-  if (error) {
-    console.error('Magic link error:', error.message)
+    // Find or create user
+    let user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    })
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: { email: normalizedEmail },
+      })
+    }
+
+    // Generate magic link token
+    const token = nanoid(32)
+    const expiresAt = new Date(Date.now() + MAGIC_LINK_EXPIRY_MINUTES * 60 * 1000)
+
+    // Store magic link in database
+    await prisma.magicLink.create({
+      data: {
+        token,
+        email: normalizedEmail,
+        userId: user.id,
+        expiresAt,
+      },
+    })
+
+    // Send email
+    const { success, error } = await sendMagicLinkEmail({
+      email: normalizedEmail,
+      token,
+    })
+
+    if (!success) {
+      console.error('Failed to send magic link email:', error)
+      return NextResponse.json({ error: 'Failed to send magic link' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Login error:', error)
     return NextResponse.json({ error: 'Failed to send magic link' }, { status: 500 })
   }
-
-  return response
 }

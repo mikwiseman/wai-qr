@@ -1,40 +1,34 @@
 import { NextResponse } from 'next/server'
-import { createServerSupabase } from '@/lib/supabase'
+import { getSession } from '@/lib/auth'
+import { prisma } from '@/lib/db'
 
 export async function GET() {
   try {
-    const supabase = await createServerSupabase()
-
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const session = await getSession()
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Get user's uploaded images
-    const { data: images, error } = await supabase
-      .from('user_images')
-      .select('id, storage_path, original_filename, created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Database error:', error)
-      return NextResponse.json({ images: [] })
-    }
+    const images = await prisma.userImage.findMany({
+      where: { userId: session.userId },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        storagePath: true,
+        originalFilename: true,
+        createdAt: true,
+      },
+    })
 
     // Convert storage paths to public URLs
-    const imagesWithUrls = images.map(image => {
-      const { data: { publicUrl } } = supabase.storage
-        .from('qr-center-images')
-        .getPublicUrl(image.storage_path)
-
-      return {
-        id: image.id,
-        url: publicUrl,
-        filename: image.original_filename || 'Uploaded image',
-      }
-    })
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://waiqr.xyz'
+    const imagesWithUrls = images.map(image => ({
+      id: image.id,
+      url: `${baseUrl}/uploads/${image.storagePath}`,
+      filename: image.originalFilename || 'Uploaded image',
+    }))
 
     return NextResponse.json({ images: imagesWithUrls })
   } catch (error) {

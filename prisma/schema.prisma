@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  qrCodes    QRCode[]
+  userImages UserImage[]
+  magicLinks MagicLink[]
+
+  @@map("users")
+}
+
+model MagicLink {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  email     String
+  userId    String?   @map("user_id")
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([token])
+  @@index([email])
+  @@map("magic_links")
+}
+
+model QRCode {
+  id              String          @id @default(uuid())
+  shortCode       String          @unique @map("short_code")
+  destinationUrl  String          @map("destination_url")
+  title           String?
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  isActive        Boolean         @default(true) @map("is_active")
+  userId          String          @map("user_id")
+  centerImageType CenterImageType @default(default_img) @map("center_image_type")
+  centerImageRef  String?         @map("center_image_ref")
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scans Scan[]
+
+  @@index([shortCode])
+  @@index([userId])
+  @@map("qr_codes")
+}
+
+enum CenterImageType {
+  default_img @map("default")
+  preset
+  custom
+  none
+}
+
+model Scan {
+  id             String   @id @default(uuid())
+  qrCodeId       String   @map("qr_code_id")
+  timestamp      DateTime @default(now())
+  deviceType     String?  @map("device_type")
+  browser        String?
+  browserVersion String?  @map("browser_version")
+  os             String?
+  osVersion      String?  @map("os_version")
+  ipAddress      String?  @map("ip_address")
+  country        String?
+  countryCode    String?  @map("country_code")
+  region         String?
+  city           String?
+  latitude       Decimal? @db.Decimal(10, 8)
+  longitude      Decimal? @db.Decimal(11, 8)
+  referrer       String?
+  userAgent      String?  @map("user_agent")
+
+  qrCode QRCode @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
+
+  @@index([qrCodeId])
+  @@index([timestamp])
+  @@map("scans")
+}
+
+model UserImage {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  storagePath      String   @map("storage_path")
+  originalFilename String?  @map("original_filename")
+  fileSize         Int?     @map("file_size")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_images")
+}

@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createPublicSupabase, CenterImageType } from '@/lib/supabase'
-import { generateQRCodeBuffer, LogoOptions } from '@/lib/qrcode'
+import { prisma } from '@/lib/db'
+import { generateQRCodeBuffer, LogoOptions, CenterImageType } from '@/lib/qrcode'
+import { CenterImageType as PrismaCenterImageType } from '@/generated/prisma'
 
-const supabase = createPublicSupabase()
+// Map Prisma enum to API values
+function fromPrismaCenterImageType(type: PrismaCenterImageType): CenterImageType {
+  if (type === 'default_img') return 'default'
+  return type as CenterImageType
+}
 
 // GET /api/qr/[code] - Download QR code as PNG
 export async function GET(
@@ -12,23 +17,21 @@ export async function GET(
   try {
     const { code } = await params
 
-    const { data: qrCode, error } = await supabase
-      .from('qr_codes')
-      .select('*')
-      .eq('short_code', code)
-      .single()
+    const qrCode = await prisma.qRCode.findUnique({
+      where: { shortCode: code },
+    })
 
-    if (error || !qrCode) {
+    if (!qrCode) {
       return NextResponse.json({ error: 'QR code not found' }, { status: 404 })
     }
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://waiqr.xyz'
-    const redirectUrl = `${baseUrl}/r/${qrCode.short_code}`
+    const redirectUrl = `${baseUrl}/r/${qrCode.shortCode}`
 
     // Build logo options from stored settings
     const logoOptions: LogoOptions = {
-      type: (qrCode.center_image_type as CenterImageType) || 'default',
-      reference: qrCode.center_image_ref || undefined,
+      type: fromPrismaCenterImageType(qrCode.centerImageType),
+      reference: qrCode.centerImageRef || undefined,
     }
 
     const buffer = await generateQRCodeBuffer(redirectUrl, logoOptions)
@@ -36,7 +39,7 @@ export async function GET(
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
         'Content-Type': 'image/png',
-        'Content-Disposition': `attachment; filename="qrcode-${qrCode.short_code}.png"`,
+        'Content-Disposition': `attachment; filename="qrcode-${qrCode.shortCode}.png"`,
       },
     })
   } catch (error) {

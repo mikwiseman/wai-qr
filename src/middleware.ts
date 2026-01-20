@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { getSessionFromRequest } from '@/lib/auth'
 
 // Public routes that don't require authentication
-const PUBLIC_ROUTES = ['/login', '/auth/', '/api/auth/', '/r/']
+const PUBLIC_ROUTES = ['/login', '/auth/', '/api/auth/', '/r/', '/api/qr/']
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -12,39 +12,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Create response to modify
-  let response = NextResponse.next({ request })
+  // Check JWT session
+  const session = await getSessionFromRequest(request)
 
-  // Create Supabase client
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => request.cookies.getAll(),
-        setAll: (cookiesToSet) => {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          response = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
-
-  // Check if user is authenticated
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
+  if (!session) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('from', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  return response
+  return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|uploads|presets|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 }

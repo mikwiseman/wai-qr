@@ -3,18 +3,12 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { QRCode } from '@/lib/supabase'
+import { QRCodeWithDetails } from '@/lib/types'
 import ScansOverTimeChart from './charts/ScansOverTimeChart'
 import DeviceBreakdownChart from './charts/DeviceBreakdownChart'
 import BrowserOSChart from './charts/BrowserOSChart'
 import GeoDistributionChart from './charts/GeoDistributionChart'
 import RecentScansTable from './RecentScansTable'
-
-interface QRCodeWithDetails extends QRCode {
-  scan_count: number
-  redirectUrl: string
-  qrImageDataUrl: string
-}
 
 interface Stats {
   totalScans: number

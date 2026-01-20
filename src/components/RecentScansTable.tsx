@@ -1,6 +1,6 @@
 'use client'
 
-import { Scan } from '@/lib/supabase'
+import { Scan } from '@/lib/types'
 
 export default function RecentScansTable({ scans }: { scans: Scan[] }) {
   if (scans.length === 0) {

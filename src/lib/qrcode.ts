@@ -1,16 +1,16 @@
 import QRCode from 'qrcode'
 import sharp from 'sharp'
 import path from 'path'
-import { CenterImageType } from './supabase'
+import { readFile } from 'fs/promises'
 
-export type { CenterImageType }
+export type CenterImageType = 'default' | 'preset' | 'custom' | 'none'
 
 const QR_SIZE = 400
 const LOGO_SIZE_PERCENT = 0.22 // Logo is 22% of QR code size (safe for H-level error correction)
 
 export interface LogoOptions {
   type: CenterImageType
-  reference?: string // preset name or storage URL
+  reference?: string // preset name or local file URL
 }
 
 async function getLogoBuffer(options: LogoOptions): Promise<Buffer | null> {
@@ -29,17 +29,35 @@ async function getLogoBuffer(options: LogoOptions): Promise<Buffer | null> {
   }
 
   if (options.type === 'custom' && options.reference) {
-    // Fetch from Supabase Storage URL
     try {
-      const response = await fetch(options.reference)
-      if (!response.ok) {
-        console.error('Failed to fetch custom logo:', response.status)
-        return null
+      // Check if reference is a URL or a local path
+      if (options.reference.startsWith('http://') || options.reference.startsWith('https://')) {
+        // Check if it's a local uploads URL
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://waiqr.xyz'
+        if (options.reference.startsWith(`${baseUrl}/uploads/`)) {
+          // Extract the relative path from the URL
+          const relativePath = options.reference.replace(`${baseUrl}/uploads/`, '')
+          const localPath = path.join(process.cwd(), 'public', 'uploads', relativePath)
+          const buffer = await readFile(localPath)
+          return buffer
+        }
+
+        // Fetch from external URL (fallback for migration period)
+        const response = await fetch(options.reference)
+        if (!response.ok) {
+          console.error('Failed to fetch custom logo:', response.status)
+          return null
+        }
+        const arrayBuffer = await response.arrayBuffer()
+        return Buffer.from(arrayBuffer)
       }
-      const arrayBuffer = await response.arrayBuffer()
-      return Buffer.from(arrayBuffer)
+
+      // Assume it's a relative path in /public/uploads/
+      const localPath = path.join(process.cwd(), 'public', 'uploads', options.reference)
+      const buffer = await readFile(localPath)
+      return buffer
     } catch (error) {
-      console.error('Error fetching custom logo:', error)
+      console.error('Error loading custom logo:', error)
       return null
     }
   }

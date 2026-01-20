@@ -1,40 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabase, CenterImageType } from '@/lib/supabase'
+import { getSession } from '@/lib/auth'
+import { prisma } from '@/lib/db'
 import { generateShortCode } from '@/lib/shortcode'
+import { CenterImageType } from '@/lib/qrcode'
+import { CenterImageType as PrismaCenterImageType } from '@/generated/prisma'
+
+// Map API values to Prisma enum
+function toPrismaCenterImageType(type: CenterImageType): PrismaCenterImageType {
+  if (type === 'default') return 'default_img'
+  return type as PrismaCenterImageType
+}
+
+// Map Prisma enum to API values
+function fromPrismaCenterImageType(type: PrismaCenterImageType): CenterImageType {
+  if (type === 'default_img') return 'default'
+  return type as CenterImageType
+}
 
 // GET /api/qrcodes - List user's QR codes with scan counts
 export async function GET() {
   try {
-    const supabase = await createServerSupabase()
-
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const session = await getSession()
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: qrCodes, error } = await supabase
-      .from('qr_codes')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
+    const qrCodes = await prisma.qRCode.findMany({
+      where: { userId: session.userId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        _count: {
+          select: { scans: true },
+        },
+      },
+    })
 
-    if (error) {
-      console.error('Error fetching QR codes:', error)
-      return NextResponse.json({ error: 'Failed to fetch QR codes' }, { status: 500 })
-    }
-
-    // Get scan counts for each QR code
-    const qrCodesWithCounts = await Promise.all(
-      (qrCodes || []).map(async (qr) => {
-        const { count } = await supabase
-          .from('scans')
-          .select('*', { count: 'exact', head: true })
-          .eq('qr_code_id', qr.id)
-
-        return { ...qr, scan_count: count || 0 }
-      })
-    )
+    // Transform to match expected API format
+    const qrCodesWithCounts = qrCodes.map(qr => ({
+      id: qr.id,
+      short_code: qr.shortCode,
+      destination_url: qr.destinationUrl,
+      title: qr.title,
+      created_at: qr.createdAt.toISOString(),
+      updated_at: qr.updatedAt.toISOString(),
+      is_active: qr.isActive,
+      user_id: qr.userId,
+      center_image_type: fromPrismaCenterImageType(qr.centerImageType),
+      center_image_ref: qr.centerImageRef,
+      scan_count: qr._count.scans,
+    }))
 
     return NextResponse.json(qrCodesWithCounts)
   } catch (error) {
@@ -46,11 +61,9 @@ export async function GET() {
 // POST /api/qrcodes - Create a new QR code
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabase()
-
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const session = await getSession()
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -73,25 +86,30 @@ export async function POST(request: NextRequest) {
     const validTypes: CenterImageType[] = ['default', 'preset', 'custom', 'none']
     const imageType: CenterImageType = validTypes.includes(centerImageType) ? centerImageType : 'default'
 
-    const { data: qrCode, error } = await supabase
-      .from('qr_codes')
-      .insert({
-        user_id: user.id,
-        short_code: shortCode,
-        destination_url: destinationUrl,
+    const qrCode = await prisma.qRCode.create({
+      data: {
+        userId: session.userId,
+        shortCode,
+        destinationUrl,
         title: title || null,
-        center_image_type: imageType,
-        center_image_ref: centerImageRef || null,
-      })
-      .select()
-      .single()
+        centerImageType: toPrismaCenterImageType(imageType),
+        centerImageRef: centerImageRef || null,
+      },
+    })
 
-    if (error) {
-      console.error('Error creating QR code:', error)
-      return NextResponse.json({ error: 'Failed to create QR code' }, { status: 500 })
-    }
-
-    return NextResponse.json(qrCode, { status: 201 })
+    // Transform to match expected API format
+    return NextResponse.json({
+      id: qrCode.id,
+      short_code: qrCode.shortCode,
+      destination_url: qrCode.destinationUrl,
+      title: qrCode.title,
+      created_at: qrCode.createdAt.toISOString(),
+      updated_at: qrCode.updatedAt.toISOString(),
+      is_active: qrCode.isActive,
+      user_id: qrCode.userId,
+      center_image_type: fromPrismaCenterImageType(qrCode.centerImageType),
+      center_image_ref: qrCode.centerImageRef,
+    }, { status: 201 })
   } catch (error) {
     console.error('Error:', error)
     return NextResponse.json({ error: 'Failed to create QR code' }, { status: 500 })

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
-import { CenterImageType } from '@/lib/supabase'
+import { CenterImageType } from '@/lib/types'
 
 interface PresetImage {
   id: string

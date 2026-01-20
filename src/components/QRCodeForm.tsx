@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ImagePicker from './ImagePicker'
-import { CenterImageType } from '@/lib/supabase'
+import { CenterImageType } from '@/lib/types'
 
 export default function QRCodeForm() {
   const [url, setUrl] = useState('')

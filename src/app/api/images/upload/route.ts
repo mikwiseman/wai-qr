@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabase } from '@/lib/supabase'
+import { getSession } from '@/lib/auth'
+import { prisma } from '@/lib/db'
 import sharp from 'sharp'
 import { nanoid } from 'nanoid'
+import { writeFile, mkdir } from 'fs/promises'
+import path from 'path'
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg']
+const UPLOADS_DIR = path.join(process.cwd(), 'public', 'uploads')
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabase()
-
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const session = await getSession()
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -47,45 +49,35 @@ export async function POST(request: NextRequest) {
       .toBuffer()
 
     // Generate unique filename
-    const filename = `${user.id}/${nanoid()}.png`
+    const filename = `${nanoid()}.png`
+    const userDir = path.join(UPLOADS_DIR, session.userId)
+    const filePath = path.join(userDir, filename)
 
-    // Upload to Supabase Storage
-    const { error: uploadError } = await supabase.storage
-      .from('qr-center-images')
-      .upload(filename, processedBuffer, {
-        contentType: 'image/png',
-        cacheControl: '3600',
-      })
+    // Ensure user directory exists
+    await mkdir(userDir, { recursive: true })
 
-    if (uploadError) {
-      console.error('Upload error:', uploadError)
-      return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 })
-    }
+    // Write file to disk
+    await writeFile(filePath, processedBuffer)
 
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('qr-center-images')
-      .getPublicUrl(filename)
+    // Store path relative to /public for URL generation
+    const storagePath = `${session.userId}/${filename}`
 
     // Store in user_images table
-    const { data: imageRecord, error: dbError } = await supabase
-      .from('user_images')
-      .insert({
-        user_id: user.id,
-        storage_path: filename,
-        original_filename: file.name,
-        file_size: processedBuffer.length,
-      })
-      .select()
-      .single()
+    const imageRecord = await prisma.userImage.create({
+      data: {
+        userId: session.userId,
+        storagePath,
+        originalFilename: file.name,
+        fileSize: processedBuffer.length,
+      },
+    })
 
-    if (dbError) {
-      console.error('Database error:', dbError)
-      // Image was uploaded but db record failed - still return success with URL
-    }
+    // Generate public URL
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://waiqr.xyz'
+    const publicUrl = `${baseUrl}/uploads/${storagePath}`
 
     return NextResponse.json({
-      id: imageRecord?.id || nanoid(),
+      id: imageRecord.id,
       url: publicUrl,
       filename: file.name,
     })

@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabase, CenterImageType } from '@/lib/supabase'
-import { generateQRCodeDataURL, LogoOptions } from '@/lib/qrcode'
+import { getSession } from '@/lib/auth'
+import { prisma } from '@/lib/db'
+import { generateQRCodeDataURL, LogoOptions, CenterImageType } from '@/lib/qrcode'
+import { CenterImageType as PrismaCenterImageType } from '@/generated/prisma'
+
+// Map Prisma enum to API values
+function fromPrismaCenterImageType(type: PrismaCenterImageType): CenterImageType {
+  if (type === 'default_img') return 'default'
+  return type as CenterImageType
+}
+
+// Map API values to Prisma enum
+function toPrismaCenterImageType(type: CenterImageType): PrismaCenterImageType {
+  if (type === 'default') return 'default_img'
+  return type as PrismaCenterImageType
+}
 
 // GET /api/qrcodes/[id] - Get single QR code with full details
 export async function GET(
@@ -9,47 +23,55 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const supabase = await createServerSupabase()
 
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const session = await getSession()
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: qrCode, error } = await supabase
-      .from('qr_codes')
-      .select('*')
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .single()
+    const qrCode = await prisma.qRCode.findFirst({
+      where: {
+        id,
+        userId: session.userId,
+      },
+      include: {
+        _count: {
+          select: { scans: true },
+        },
+      },
+    })
 
-    if (error || !qrCode) {
+    if (!qrCode) {
       return NextResponse.json({ error: 'QR code not found' }, { status: 404 })
     }
 
-    // Get scan count
-    const { count } = await supabase
-      .from('scans')
-      .select('*', { count: 'exact', head: true })
-      .eq('qr_code_id', id)
-
     // Generate the redirect URL
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://waiqr.xyz'
-    const redirectUrl = `${baseUrl}/r/${qrCode.short_code}`
+    const redirectUrl = `${baseUrl}/r/${qrCode.shortCode}`
 
     // Build logo options from stored settings
+    const centerImageType = fromPrismaCenterImageType(qrCode.centerImageType)
     const logoOptions: LogoOptions = {
-      type: (qrCode.center_image_type as CenterImageType) || 'default',
-      reference: qrCode.center_image_ref || undefined,
+      type: centerImageType,
+      reference: qrCode.centerImageRef || undefined,
     }
 
     // Generate QR code image as data URL
     const qrImageDataUrl = await generateQRCodeDataURL(redirectUrl, logoOptions)
 
     return NextResponse.json({
-      ...qrCode,
-      scan_count: count || 0,
+      id: qrCode.id,
+      short_code: qrCode.shortCode,
+      destination_url: qrCode.destinationUrl,
+      title: qrCode.title,
+      created_at: qrCode.createdAt.toISOString(),
+      updated_at: qrCode.updatedAt.toISOString(),
+      is_active: qrCode.isActive,
+      user_id: qrCode.userId,
+      center_image_type: centerImageType,
+      center_image_ref: qrCode.centerImageRef,
+      scan_count: qrCode._count.scans,
       redirectUrl,
       qrImageDataUrl,
     })
@@ -66,24 +88,23 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
-    const supabase = await createServerSupabase()
 
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const session = await getSession()
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Delete only if owned by user
-    const { error } = await supabase
-      .from('qr_codes')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', user.id)
+    const result = await prisma.qRCode.deleteMany({
+      where: {
+        id,
+        userId: session.userId,
+      },
+    })
 
-    if (error) {
-      console.error('Error deleting QR code:', error)
-      return NextResponse.json({ error: 'Failed to delete QR code' }, { status: 500 })
+    if (result.count === 0) {
+      return NextResponse.json({ error: 'QR code not found' }, { status: 404 })
     }
 
     return NextResponse.json({ success: true })
@@ -100,39 +121,59 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params
-    const supabase = await createServerSupabase()
 
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const session = await getSession()
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
 
+    // Build update data
     const updateData: Record<string, unknown> = {}
-    if (body.destinationUrl !== undefined) updateData.destination_url = body.destinationUrl
+    if (body.destinationUrl !== undefined) updateData.destinationUrl = body.destinationUrl
     if (body.title !== undefined) updateData.title = body.title
-    if (body.isActive !== undefined) updateData.is_active = body.isActive
-    if (body.centerImageType !== undefined) updateData.center_image_type = body.centerImageType
-    if (body.centerImageRef !== undefined) updateData.center_image_ref = body.centerImageRef
-    updateData.updated_at = new Date().toISOString()
+    if (body.isActive !== undefined) updateData.isActive = body.isActive
+    if (body.centerImageType !== undefined) {
+      updateData.centerImageType = toPrismaCenterImageType(body.centerImageType as CenterImageType)
+    }
+    if (body.centerImageRef !== undefined) updateData.centerImageRef = body.centerImageRef
 
     // Update only if owned by user
-    const { data: qrCode, error } = await supabase
-      .from('qr_codes')
-      .update(updateData)
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .select()
-      .single()
+    const qrCode = await prisma.qRCode.updateMany({
+      where: {
+        id,
+        userId: session.userId,
+      },
+      data: updateData,
+    })
 
-    if (error) {
-      console.error('Error updating QR code:', error)
-      return NextResponse.json({ error: 'Failed to update QR code' }, { status: 500 })
+    if (qrCode.count === 0) {
+      return NextResponse.json({ error: 'QR code not found' }, { status: 404 })
     }
 
-    return NextResponse.json(qrCode)
+    // Fetch updated record
+    const updated = await prisma.qRCode.findUnique({
+      where: { id },
+    })
+
+    if (!updated) {
+      return NextResponse.json({ error: 'QR code not found' }, { status: 404 })
+    }
+
+    return NextResponse.json({
+      id: updated.id,
+      short_code: updated.shortCode,
+      destination_url: updated.destinationUrl,
+      title: updated.title,
+      created_at: updated.createdAt.toISOString(),
+      updated_at: updated.updatedAt.toISOString(),
+      is_active: updated.isActive,
+      user_id: updated.userId,
+      center_image_type: fromPrismaCenterImageType(updated.centerImageType),
+      center_image_ref: updated.centerImageRef,
+    })
   } catch (error) {
     console.error('Error:', error)
     return NextResponse.json({ error: 'Failed to update QR code' }, { status: 500 })
