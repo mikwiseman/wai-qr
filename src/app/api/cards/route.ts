@@ -2,6 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { generateShortCode } from '@/lib/shortcode'
+import { CenterImageType as PrismaCenterImageType } from '@/generated/prisma'
+
+// Map API center image type to Prisma enum
+function toPrismaCenterImageType(type: string): PrismaCenterImageType {
+  if (type === 'default') return 'default_img'
+  if (type === 'preset' || type === 'custom' || type === 'none') return type as PrismaCenterImageType
+  return 'default_img'
+}
+
+// Map Prisma enum to API format
+function fromPrismaCenterImageType(type: PrismaCenterImageType): string {
+  if (type === 'default_img') return 'default'
+  return type
+}
 
 // Transform Prisma BusinessCard to API format
 function transformCard(card: {
@@ -23,6 +37,8 @@ function transformCard(card: {
   themeStyle: string
   calendarUrl: string | null
   calendarEmbed: boolean
+  qrCenterType: PrismaCenterImageType
+  qrCenterImage: string | null
   isActive: boolean
   isPublic: boolean
   showVcardDownload: boolean
@@ -50,6 +66,8 @@ function transformCard(card: {
     theme_style: card.themeStyle,
     calendar_url: card.calendarUrl,
     calendar_embed: card.calendarEmbed,
+    qr_center_type: fromPrismaCenterImageType(card.qrCenterType),
+    qr_center_image: card.qrCenterImage,
     is_active: card.isActive,
     is_public: card.isPublic,
     show_vcard_download: card.showVcardDownload,
@@ -116,6 +134,8 @@ export async function POST(request: NextRequest) {
       themeStyle,
       calendarUrl,
       calendarEmbed,
+      qrCenterType,
+      qrCenterImage,
       socialLinks,
       customLinks,
     } = body
@@ -150,6 +170,8 @@ export async function POST(request: NextRequest) {
           themeStyle: themeStyle || 'modern',
           calendarUrl: calendarUrl?.trim() || null,
           calendarEmbed: calendarEmbed || false,
+          qrCenterType: qrCenterType ? toPrismaCenterImageType(qrCenterType) : 'default_img',
+          qrCenterImage: qrCenterImage || null,
         },
       })
 

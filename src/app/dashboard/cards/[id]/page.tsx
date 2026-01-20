@@ -6,6 +6,15 @@ import LogoutButton from '@/components/LogoutButton'
 import CardForm from '@/components/cards/CardForm'
 import CardAnalytics from '@/components/cards/CardAnalytics'
 import CopyButton from '@/components/cards/CopyButton'
+import CardQRCode from '@/components/cards/CardQRCode'
+import { CenterImageType as PrismaCenterImageType } from '@/generated/prisma'
+import { CenterImageType } from '@/lib/types'
+
+// Map Prisma enum to API format
+function fromPrismaCenterImageType(type: PrismaCenterImageType): CenterImageType {
+  if (type === 'default_img') return 'default'
+  return type as CenterImageType
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -53,6 +62,8 @@ async function getCard(id: string, userId: string) {
     theme_style: card.themeStyle,
     calendar_url: card.calendarUrl,
     calendar_embed: card.calendarEmbed,
+    qr_center_type: fromPrismaCenterImageType(card.qrCenterType),
+    qr_center_image: card.qrCenterImage,
     is_active: card.isActive,
     is_public: card.isPublic,
     show_vcard_download: card.showVcardDownload,
@@ -139,10 +150,10 @@ export default async function EditCardPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Card URL */}
+          {/* Card URL and QR Code */}
           <div className="bg-white rounded-lg shadow p-4 mb-6">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex-1">
                 <span className="text-sm text-gray-600">Card URL:</span>
                 <a
                   href={cardUrl}
@@ -153,7 +164,10 @@ export default async function EditCardPage({ params }: PageProps) {
                   {cardUrl}
                 </a>
               </div>
-              <CopyButton text={cardUrl} />
+              <div className="flex items-center gap-3">
+                <CopyButton text={cardUrl} />
+                <CardQRCode cardId={card.id} shortCode={card.short_code} />
+              </div>
             </div>
           </div>
 

@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { cardThemes, accentColors } from '@/lib/card-themes'
 import { socialPlatforms, getPlatformById } from '@/lib/social-platforms'
+import ImagePicker from '@/components/ImagePicker'
+import { CenterImageType } from '@/lib/types'
 
 interface SocialLinkInput {
   platform: string
@@ -37,6 +39,8 @@ interface CardData {
   theme_style: string
   calendar_url: string | null
   calendar_embed: boolean
+  qr_center_type: CenterImageType
+  qr_center_image: string | null
   is_active: boolean
   is_public: boolean
   show_vcard_download: boolean
@@ -89,6 +93,12 @@ export default function CardForm({ mode, card }: CardFormProps) {
   // Calendar
   const [calendarUrl, setCalendarUrl] = useState(card?.calendar_url || '')
   const [calendarEmbed, setCalendarEmbed] = useState(card?.calendar_embed || false)
+
+  // QR Code Customization
+  const [qrCenterImage, setQrCenterImage] = useState<{ type: CenterImageType; reference?: string }>({
+    type: card?.qr_center_type || 'default',
+    reference: card?.qr_center_image || undefined,
+  })
 
   // Settings
   const [isActive, setIsActive] = useState(card?.is_active !== false)
@@ -172,6 +182,8 @@ export default function CardForm({ mode, card }: CardFormProps) {
         themeColor,
         calendarUrl: calendarUrl.trim() || null,
         calendarEmbed,
+        qrCenterType: qrCenterImage.type,
+        qrCenterImage: qrCenterImage.reference || null,
         isActive,
         isPublic,
         showVcardDownload,
@@ -537,6 +549,15 @@ export default function CardForm({ mode, card }: CardFormProps) {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* QR Code Customization */}
+      <section>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">QR Code Center Image</h2>
+        <p className="text-sm text-gray-600 mb-4">
+          Customize the center image of your card&apos;s QR code
+        </p>
+        <ImagePicker value={qrCenterImage} onChange={setQrCenterImage} />
       </section>
 
       {/* Settings Section */}

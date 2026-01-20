@@ -3,10 +3,17 @@ import { headers } from 'next/headers'
 import { prisma } from '@/lib/db'
 import { parseUserAgent } from '@/lib/user-agent'
 import { getGeoLocation } from '@/lib/geolocation'
-import { generateQRCodeDataURL } from '@/lib/qrcode'
+import { generateQRCodeDataURL, type CenterImageType } from '@/lib/qrcode'
 import { Decimal } from '@/generated/prisma/runtime/library'
+import { CenterImageType as PrismaCenterImageType } from '@/generated/prisma'
 import CardPublicView from '@/components/cards/CardPublicView'
 import { Metadata } from 'next'
+
+// Map Prisma enum to qrcode lib type
+function fromPrismaCenterImageType(type: PrismaCenterImageType): CenterImageType {
+  if (type === 'default_img') return 'default'
+  return type as CenterImageType
+}
 
 interface PageProps {
   params: Promise<{ code: string }>
@@ -109,10 +116,14 @@ export default async function CardPublicPage({ params }: PageProps) {
     })
     .catch(console.error)
 
-  // Generate QR code for the card URL
+  // Generate QR code for the card URL with card's customization settings
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://waiqr.xyz'
   const cardUrl = `${baseUrl}/c/${card.shortCode}`
-  const qrCodeDataUrl = await generateQRCodeDataURL(cardUrl, { type: 'none' })
+  const qrLogoOptions = {
+    type: fromPrismaCenterImageType(card.qrCenterType),
+    reference: card.qrCenterImage || undefined,
+  }
+  const qrCodeDataUrl = await generateQRCodeDataURL(cardUrl, qrLogoOptions)
 
   // Transform card data for the component
   const cardData = {

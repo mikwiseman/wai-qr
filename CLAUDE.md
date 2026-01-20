@@ -207,9 +207,29 @@ NEXT_PUBLIC_BASE_URL="http://localhost:3000"
 
 ## Deployment Process
 
-**Automatic**: Push to `main` branch triggers GitHub Actions deployment.
+### Automatic Deployment (Default)
 
-### Manual Deploy (if needed)
+**DO NOT deploy manually via SSH.** Deployment is fully automated via GitHub Actions.
+
+Simply push to `main` branch:
+```bash
+git push origin main
+```
+
+GitHub Actions will automatically:
+1. Pull latest code on server
+2. Install dependencies
+3. Generate Prisma client
+4. Push schema changes to database
+5. Build the application
+6. Copy static files (preserving user uploads)
+7. Restart the service
+
+The workflow is defined in `.github/workflows/deploy.yml`.
+
+### Manual Deploy (Emergency Only)
+
+Only use manual deployment if GitHub Actions is broken:
 
 ```bash
 # On server

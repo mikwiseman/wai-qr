@@ -136,6 +136,10 @@ model BusinessCard {
   calendarUrl     String?  @map("calendar_url")
   calendarEmbed   Boolean  @default(false) @map("calendar_embed")
 
+  // QR Code Customization
+  qrCenterType    CenterImageType @default(default_img) @map("qr_center_type")
+  qrCenterImage   String?         @map("qr_center_image")
+
   // Settings
   isActive        Boolean  @default(true) @map("is_active")
   isPublic        Boolean  @default(true) @map("is_public")
