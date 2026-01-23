@@ -4,7 +4,6 @@ import { prisma } from '@/lib/db'
 import { parseUserAgent } from '@/lib/user-agent'
 import { getGeoLocation } from '@/lib/geolocation'
 import { generateQRCodeDataURL, type CenterImageType } from '@/lib/qrcode'
-import { Decimal } from '@/generated/prisma/runtime/library'
 import { CenterImageType as PrismaCenterImageType } from '@/generated/prisma'
 import CardPublicView from '@/components/cards/CardPublicView'
 import { Metadata } from 'next'
@@ -107,8 +106,8 @@ export default async function CardPublicPage({ params }: PageProps) {
           countryCode: geo.countryCode,
           region: geo.region,
           city: geo.city,
-          latitude: geo.latitude !== null ? new Decimal(geo.latitude) : null,
-          longitude: geo.longitude !== null ? new Decimal(geo.longitude) : null,
+          latitude: geo.latitude,
+          longitude: geo.longitude,
           referrer,
           userAgent: userAgentString,
         },

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { parseUserAgent } from '@/lib/user-agent'
 import { getGeoLocation, getClientIP } from '@/lib/geolocation'
-import { Decimal } from '@/generated/prisma/runtime/library'
 
 export async function GET(
   request: NextRequest,
@@ -48,8 +47,8 @@ export async function GET(
             countryCode: geo.countryCode,
             region: geo.region,
             city: geo.city,
-            latitude: geo.latitude !== null ? new Decimal(geo.latitude) : null,
-            longitude: geo.longitude !== null ? new Decimal(geo.longitude) : null,
+            latitude: geo.latitude,
+            longitude: geo.longitude,
             referrer,
             userAgent: userAgentString,
           },
