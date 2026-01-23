@@ -27,6 +27,7 @@ interface CardPreviewProps {
   phone: string
   website: string
   themeStyle: string
+  themeColor: string
   socialLinks: SocialLinkPreview[]
   customLinks: CustomLinkPreview[]
   calendarUrl: string
@@ -44,6 +45,7 @@ export default function CardPreview({
   phone,
   website,
   themeStyle,
+  themeColor,
   socialLinks,
   customLinks,
   calendarUrl,
@@ -200,7 +202,10 @@ export default function CardPreview({
           {/* Action Buttons */}
           {showVcardDownload && (
             <div className="px-4 pb-4">
-              <div className={`w-full py-2 px-3 rounded-lg text-center text-sm font-medium ${theme.buttonBgClass} ${theme.buttonTextClass}`}>
+              <div
+                className="w-full py-2 px-3 rounded-lg text-center text-sm font-medium text-white"
+                style={{ backgroundColor: themeColor }}
+              >
                 Save Contact
               </div>
             </div>

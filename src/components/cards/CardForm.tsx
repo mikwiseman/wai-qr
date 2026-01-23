@@ -674,6 +674,7 @@ export default function CardForm({ mode, card, initialData }: CardFormProps) {
               phone={phone}
               website={website}
               themeStyle={themeStyle}
+              themeColor={themeColor}
               socialLinks={socialLinks}
               customLinks={customLinks}
               calendarUrl={calendarUrl}
@@ -698,6 +699,7 @@ export default function CardForm({ mode, card, initialData }: CardFormProps) {
             phone={phone}
             website={website}
             themeStyle={themeStyle}
+            themeColor={themeColor}
             socialLinks={socialLinks}
             customLinks={customLinks}
             calendarUrl={calendarUrl}

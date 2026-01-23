@@ -267,7 +267,8 @@ export default function CardPublicView({ card, qrCodeDataUrl }: CardPublicViewPr
             {card.showVcardDownload && (
               <button
                 onClick={handleVcardClick}
-                className={`w-full py-3 px-4 rounded-xl ${theme.buttonBgClass} ${theme.buttonHoverClass} ${theme.buttonTextClass} font-medium transition-colors`}
+                className="w-full py-3 px-4 rounded-xl text-white font-medium transition-colors hover:opacity-90"
+                style={{ backgroundColor: card.themeColor }}
               >
                 ⬇️ Save Contact
               </button>
