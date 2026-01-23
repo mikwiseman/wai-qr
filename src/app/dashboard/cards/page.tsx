@@ -53,11 +53,11 @@ export default async function CardsPage() {
               WaiQR
             </Link>
             <nav className="flex gap-4">
-              <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">
-                QR Codes
-              </Link>
               <Link href="/dashboard/cards" className="text-violet-600 font-medium">
                 Business Cards
+              </Link>
+              <Link href="/dashboard/qr" className="text-gray-600 hover:text-gray-900">
+                QR Codes
               </Link>
             </nav>
           </div>

@@ -23,38 +23,23 @@ interface CardsListProps {
 
 export default function CardsList({ cards: initialCards }: CardsListProps) {
   const [cards, setCards] = useState(initialCards)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://waiqr.xyz'
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this business card? This action cannot be undone.')) {
-      return
-    }
-
-    setDeletingId(id)
+  const handleDownloadQR = async (cardId: string, shortCode: string) => {
     try {
-      const response = await fetch(`/api/cards/${id}`, {
-        method: 'DELETE',
-      })
-
-      if (response.ok) {
-        setCards(cards.filter(card => card.id !== id))
-      } else {
-        alert('Failed to delete card')
-      }
+      const response = await fetch(`/api/cards/${cardId}/qrcode`)
+      if (!response.ok) throw new Error('Failed to download')
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `card-${shortCode}-qr.png`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
     } catch (error) {
-      console.error('Error deleting card:', error)
-      alert('Failed to delete card')
-    } finally {
-      setDeletingId(null)
+      console.error('Download failed:', error)
     }
-  }
-
-  const copyCardUrl = (shortCode: string) => {
-    const url = `${baseUrl}/c/${shortCode}`
-    navigator.clipboard.writeText(url)
-    alert('Card URL copied to clipboard!')
   }
 
   if (cards.length === 0) {
@@ -137,32 +122,32 @@ export default function CardsList({ cards: initialCards }: CardsListProps) {
           {/* Actions */}
           <div className="px-6 py-4 border-t border-gray-100 flex items-center gap-2">
             <Link
-              href={`/dashboard/cards/${card.id}`}
-              className="flex-1 text-center py-2 px-3 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium rounded transition-colors"
-            >
-              Edit
-            </Link>
-            <Link
               href={`/c/${card.short_code}`}
               target="_blank"
-              className="py-2 px-3 border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded transition-colors"
+              className="flex-1 text-center py-2 px-3 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium rounded transition-colors"
             >
               View
             </Link>
-            <button
-              onClick={() => copyCardUrl(card.short_code)}
+            <Link
+              href={`/dashboard/cards/${card.id}/stats`}
               className="py-2 px-3 border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded transition-colors"
-              title="Copy URL"
             >
-              📋
-            </button>
+              Stats
+            </Link>
+            <Link
+              href={`/dashboard/cards/${card.id}`}
+              className="py-2 px-3 border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded transition-colors"
+            >
+              Edit
+            </Link>
             <button
-              onClick={() => handleDelete(card.id)}
-              disabled={deletingId === card.id}
-              className="py-2 px-3 border border-red-300 hover:bg-red-50 text-red-600 text-sm font-medium rounded transition-colors disabled:opacity-50"
-              title="Delete"
+              onClick={() => handleDownloadQR(card.id, card.short_code)}
+              className="py-2 px-3 border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded transition-colors"
+              title="Download QR Code"
             >
-              {deletingId === card.id ? '...' : '🗑️'}
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
             </button>
           </div>
         </div>

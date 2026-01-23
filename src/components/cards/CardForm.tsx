@@ -4,9 +4,20 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { cardThemes, accentColors } from '@/lib/card-themes'
 import { socialPlatforms, getPlatformById } from '@/lib/social-platforms'
+import { getSocialIconComponent } from '@/components/icons/SocialIcons'
 import ImagePicker from '@/components/ImagePicker'
 import AvatarUploader from '@/components/cards/AvatarUploader'
+import CardPreview from '@/components/cards/CardPreview'
 import { CenterImageType } from '@/lib/types'
+
+// Normalize URLs by adding https:// if no protocol present
+function normalizeUrl(url: string): string {
+  const trimmed = url.trim()
+  if (!trimmed) return trimmed
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed
+  if (trimmed.includes(':')) return trimmed // mailto:, tel:, etc.
+  return `https://${trimmed}`
+}
 
 interface SocialLinkInput {
   platform: string
@@ -206,8 +217,12 @@ export default function CardForm({ mode, card, initialData }: CardFormProps) {
         isActive,
         isPublic,
         showVcardDownload,
-        socialLinks: socialLinks.filter(l => l.url.trim()),
-        customLinks: customLinks.filter(l => l.title.trim() && l.url.trim()),
+        socialLinks: socialLinks
+          .filter(l => l.url.trim())
+          .map(l => ({ ...l, url: normalizeUrl(l.url) })),
+        customLinks: customLinks
+          .filter(l => l.title.trim() && l.url.trim())
+          .map(l => ({ ...l, url: normalizeUrl(l.url) })),
       }
 
       const url = mode === 'create' ? '/api/cards' : `/api/cards/${card?.id}`
@@ -233,9 +248,15 @@ export default function CardForm({ mode, card, initialData }: CardFormProps) {
     }
   }
 
+  // State for preview visibility on mobile
+  const [showPreview, setShowPreview] = useState(false)
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Profile Section */}
+    <div className="flex flex-col lg:flex-row gap-8">
+      {/* Form */}
+      <div className="flex-1">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Profile Section */}
       <section>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Profile</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -391,7 +412,7 @@ export default function CardForm({ mode, card, initialData }: CardFormProps) {
               >
                 {socialPlatforms.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.icon} {p.name}
+                    {p.name}
                   </option>
                 ))}
               </select>
@@ -597,23 +618,93 @@ export default function CardForm({ mode, card, initialData }: CardFormProps) {
         </div>
       )}
 
-      {/* Submit */}
-      <div className="flex gap-4">
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex-1 py-3 px-4 bg-violet-600 hover:bg-violet-700 disabled:bg-violet-400 text-white font-medium rounded-lg transition-colors"
-        >
-          {loading ? 'Saving...' : mode === 'create' ? 'Create Card' : 'Save Changes'}
-        </button>
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="px-6 py-3 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded-lg transition-colors"
-        >
-          Cancel
-        </button>
+          {/* Submit */}
+          <div className="flex gap-4">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 py-3 px-4 bg-violet-600 hover:bg-violet-700 disabled:bg-violet-400 text-white font-medium rounded-lg transition-colors"
+            >
+              {loading ? 'Saving...' : mode === 'create' ? 'Create Card' : 'Save Changes'}
+            </button>
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="px-6 py-3 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       </div>
-    </form>
+
+      {/* Preview Toggle (Mobile) */}
+      <button
+        type="button"
+        onClick={() => setShowPreview(!showPreview)}
+        className="lg:hidden fixed bottom-4 right-4 z-50 px-4 py-3 bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-full shadow-lg transition-colors flex items-center gap-2"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+        {showPreview ? 'Hide Preview' : 'Preview'}
+      </button>
+
+      {/* Preview Panel (Mobile Overlay) */}
+      {showPreview && (
+        <div className="lg:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setShowPreview(false)}>
+          <div className="absolute right-0 top-0 bottom-0 w-full max-w-sm bg-white shadow-xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
+              <h3 className="font-semibold text-gray-900">Preview</h3>
+              <button onClick={() => setShowPreview(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <CardPreview
+              displayName={displayName}
+              headline={headline}
+              bio={bio}
+              avatarUrl={avatarUrl}
+              company={company}
+              location={location}
+              email={email}
+              phone={phone}
+              website={website}
+              themeStyle={themeStyle}
+              socialLinks={socialLinks}
+              customLinks={customLinks}
+              calendarUrl={calendarUrl}
+              showVcardDownload={showVcardDownload}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Preview Panel (Desktop Sticky) */}
+      <div className="hidden lg:block w-[375px] flex-shrink-0">
+        <div className="sticky top-4">
+          <h3 className="font-semibold text-gray-900 mb-3">Live Preview</h3>
+          <CardPreview
+            displayName={displayName}
+            headline={headline}
+            bio={bio}
+            avatarUrl={avatarUrl}
+            company={company}
+            location={location}
+            email={email}
+            phone={phone}
+            website={website}
+            themeStyle={themeStyle}
+            socialLinks={socialLinks}
+            customLinks={customLinks}
+            calendarUrl={calendarUrl}
+            showVcardDownload={showVcardDownload}
+          />
+        </div>
+      </div>
+    </div>
   )
 }

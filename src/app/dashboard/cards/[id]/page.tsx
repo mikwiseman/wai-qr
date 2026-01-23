@@ -4,7 +4,7 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import LogoutButton from '@/components/LogoutButton'
 import CardForm from '@/components/cards/CardForm'
-import CardAnalytics from '@/components/cards/CardAnalytics'
+import DeleteCardButton from '@/components/cards/DeleteCardButton'
 import CopyButton from '@/components/cards/CopyButton'
 import CardQRCode from '@/components/cards/CardQRCode'
 import { CenterImageType as PrismaCenterImageType } from '@/generated/prisma'
@@ -113,11 +113,11 @@ export default async function EditCardPage({ params }: PageProps) {
               WaiQR
             </Link>
             <nav className="flex gap-4">
-              <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">
-                QR Codes
-              </Link>
               <Link href="/dashboard/cards" className="text-violet-600 font-medium">
                 Business Cards
+              </Link>
+              <Link href="/dashboard/qr" className="text-gray-600 hover:text-gray-900">
+                QR Codes
               </Link>
             </nav>
           </div>
@@ -132,11 +132,17 @@ export default async function EditCardPage({ params }: PageProps) {
             </Link>
             <div className="flex gap-3">
               <Link
+                href={`/dashboard/cards/${card.id}/stats`}
+                className="px-4 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded-lg transition-colors"
+              >
+                View Stats
+              </Link>
+              <Link
                 href={cardUrl}
                 target="_blank"
                 className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-lg transition-colors"
               >
-                View Card ↗
+                View Card
               </Link>
             </div>
           </div>
@@ -162,19 +168,13 @@ export default async function EditCardPage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Card Form */}
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-lg shadow p-6">
-                <h1 className="text-2xl font-bold text-gray-900 mb-6">Edit Business Card</h1>
-                <CardForm mode="edit" card={card} />
-              </div>
+          {/* Card Form */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-bold text-gray-900">Edit Business Card</h1>
+              <DeleteCardButton cardId={card.id} cardName={card.display_name} />
             </div>
-
-            {/* Analytics */}
-            <div className="lg:col-span-1">
-              <CardAnalytics cardId={card.id} />
-            </div>
+            <CardForm mode="edit" card={card} />
           </div>
         </div>
       </main>

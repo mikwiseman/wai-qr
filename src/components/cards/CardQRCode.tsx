@@ -38,15 +38,18 @@ export default function CardQRCode({ cardId, shortCode }: CardQRCodeProps) {
       <div className="flex gap-2">
         <button
           onClick={() => setShowPreview(!showPreview)}
-          className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+          className="px-4 py-2 text-sm bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg transition-colors"
         >
           {showPreview ? 'Hide QR' : 'Show QR'}
         </button>
         <button
           onClick={handleDownload}
           disabled={downloading}
-          className="px-3 py-1 text-sm bg-violet-600 hover:bg-violet-700 text-white rounded transition-colors disabled:opacity-50"
+          className="px-4 py-2 text-sm bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
         >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
           {downloading ? 'Downloading...' : 'Download QR'}
         </button>
       </div>
