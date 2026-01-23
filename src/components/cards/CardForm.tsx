@@ -408,7 +408,7 @@ export default function CardForm({ mode, card, initialData }: CardFormProps) {
               <select
                 value={link.platform}
                 onChange={(e) => updateSocialLink(index, 'platform', e.target.value)}
-                className="w-40 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                className="w-40 px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
               >
                 {socialPlatforms.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -417,10 +417,10 @@ export default function CardForm({ mode, card, initialData }: CardFormProps) {
                 ))}
               </select>
               <input
-                type="url"
+                type="text"
                 value={link.url}
                 onChange={(e) => updateSocialLink(index, 'url', e.target.value)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
                 placeholder={getPlatformById(link.platform)?.placeholder || 'https://...'}
               />
               <button
