@@ -16,10 +16,10 @@ WaiQR is a QR code generator and analytics platform. Users can create QR codes w
 
 ## Production Server
 
-- **IP**: 164.92.123.157
+- **IP**: 159.65.29.5
 - **Domain**: waiqr.xyz
 - **Location**: DigitalOcean droplet (4GB RAM, 2 vCPUs)
-- **OS**: Ubuntu 22.04
+- **OS**: Ubuntu 24.04
 
 ### Server Directory Structure
 
@@ -45,7 +45,7 @@ WaiQR is a QR code generator and analytics platform. Users can create QR codes w
 
 ```bash
 # SSH to server
-ssh root@164.92.123.157
+ssh root@159.65.29.5
 
 # View application logs
 journalctl -u wai-qr -f
@@ -69,10 +69,10 @@ Host: localhost
 Port: 5432
 Database: waiqr
 User: waiqr_user
-Password: OGyPblKJatdDaV382uORvLLW
+Password: 81IcaepoQxEaU5uycPV14xGx
 ```
 
-**Connection URL**: `postgresql://waiqr_user:OGyPblKJatdDaV382uORvLLW@localhost:5432/waiqr`
+**Connection URL**: `postgresql://waiqr_user:81IcaepoQxEaU5uycPV14xGx@localhost:5432/waiqr`
 
 ### Schema (Prisma)
 
@@ -272,7 +272,7 @@ SSL certificates managed by Certbot (Let's Encrypt), auto-renewal enabled.
 ### Upload fails with permission error
 
 ```bash
-ssh root@164.92.123.157 "chown -R www-data:www-data /opt/wai-qr/.next/standalone/public/uploads"
+ssh root@159.65.29.5 "chown -R www-data:www-data /opt/wai-qr/.next/standalone/public/uploads"
 ```
 
 ### Application not starting
@@ -295,16 +295,15 @@ certbot renew --dry-run  # Test renewal
 certbot renew            # Force renewal
 ```
 
-## Multi-Project Server Notes
+## Server Notes
 
-This server hosts multiple projects:
+This is a dedicated server for WaiQR:
 
 | Project | Port | Directory |
 |---------|------|-----------|
 | wai-qr | 3000 | /opt/wai-qr |
-| wai-lovable | 4000 | /opt/wai-lovable |
 
-Each project has its own:
-- PostgreSQL database
-- systemd service
-- Nginx site config
+Components:
+- PostgreSQL 16 database
+- systemd service (`wai-qr.service`)
+- Nginx reverse proxy with SSL (Let's Encrypt)
