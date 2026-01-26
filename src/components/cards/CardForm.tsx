@@ -256,6 +256,19 @@ export default function CardForm({ mode, card, initialData }: CardFormProps) {
       {/* Form */}
       <div className="flex-1">
         <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Top Save Button (edit mode only) */}
+          {mode === 'edit' && (
+            <div className="flex gap-4">
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 py-3 px-4 bg-violet-600 hover:bg-violet-700 disabled:bg-violet-400 text-white font-medium rounded-lg transition-colors"
+              >
+                {loading ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          )}
+
           {/* Profile Section */}
       <section>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Profile</h2>
